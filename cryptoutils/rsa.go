@@ -88,6 +88,18 @@ func ImportRsa(keyPath string) (rsa.PrivateKey, rsa.PublicKey, error) {
 	return *prvKey, *pubKey, nil
 }
 
+func ImportRsaPub(pemStr []byte) (rsa.PublicKey, error) {
+	pubBlock, _ := pem.Decode(pemStr)
+	if pubBlock == nil {
+		return rsa.PublicKey{}, errors.New("invalid RSA public key")
+	}
+	pubKey, err := x509.ParsePKCS1PublicKey(pubBlock.Bytes)
+	if err != nil {
+		return rsa.PublicKey{}, err
+	}
+	return *pubKey, err
+}
+
 func RsaEncrypt(pubKey *rsa.PublicKey, plaintext []byte) ([]byte, error) {
 	cipherText, err := rsa.EncryptPKCS1v15(rand.Reader, pubKey, plaintext)
 	if err != nil {
