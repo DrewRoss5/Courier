@@ -34,7 +34,6 @@ func AesEncrypt(plaintext []byte, key []byte) ([]byte, error) {
 	// generate a nonce
 	nonce := make([]byte, gcm.NonceSize())
 	rand.Reader.Read(nonce)
-
 	ciphertext := gcm.Seal(plaintext[:0], nonce, plaintext, nil)
 	ciphertext = append(nonce, ciphertext...)
 	return ciphertext, nil
