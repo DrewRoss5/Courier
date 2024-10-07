@@ -11,7 +11,10 @@ import (
 	"os"
 )
 
-const RSA_KEY_SIZE = 4096
+const (
+	RSA_KEY_SIZE   = 4096
+	SIGNATURE_SIZE = 512
+)
 
 // generates a pair of RSA keys and saves them to the provided path
 func GenerateRsaKeys(keyPath string) error {
@@ -88,6 +91,7 @@ func ImportRsa(keyPath string) (rsa.PrivateKey, rsa.PublicKey, error) {
 	return *prvKey, *pubKey, nil
 }
 
+// imports an RSA public key from a byte string of the pem-encoded key
 func ImportRsaPub(pemStr []byte) (rsa.PublicKey, error) {
 	pubBlock, _ := pem.Decode(pemStr)
 	if pubBlock == nil {
@@ -100,6 +104,17 @@ func ImportRsaPub(pemStr []byte) (rsa.PublicKey, error) {
 	return *pubKey, err
 }
 
+// exports the pem-encoded byte array of a given RSA key
+func ExportRsaPub(pubKey *rsa.PublicKey) []byte {
+	pubBytes := x509.MarshalPKCS1PublicKey(pubKey)
+	pubBlock := pem.Block{
+		Type:  "RSA PUBLIC KEY",
+		Bytes: pubBytes,
+	}
+	return pem.EncodeToMemory(&pubBlock)
+}
+
+// encrypts a given plaintext with the provided public key
 func RsaEncrypt(pubKey *rsa.PublicKey, plaintext []byte) ([]byte, error) {
 	cipherText, err := rsa.EncryptPKCS1v15(rand.Reader, pubKey, plaintext)
 	if err != nil {
@@ -108,6 +123,7 @@ func RsaEncrypt(pubKey *rsa.PublicKey, plaintext []byte) ([]byte, error) {
 	return cipherText, nil
 }
 
+// decrypts a given plaintext with the provided private key
 func RsaDecrypt(prvKey *rsa.PrivateKey, ciphertext []byte) ([]byte, error) {
 	plaintext, err := rsa.DecryptPKCS1v15(nil, prvKey, ciphertext)
 	if err != nil {
