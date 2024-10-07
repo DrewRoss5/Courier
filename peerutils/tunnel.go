@@ -1,0 +1,63 @@
+package peerutils
+
+import (
+	"crypto/rsa"
+	"errors"
+	"net"
+
+	"github.com/DrewRoss5/courier/cryptoutils"
+)
+
+type tunnel struct {
+	sessionKey []byte
+	peerPubKey rsa.PublicKey
+	userPrvKey rsa.PrivateKey
+	incoming   net.Conn
+	outgoing   net.Conn
+	peer       user
+	user       user
+}
+
+// encrypts and sends the provided message through this tunnel
+func (t tunnel) SendMessage(message []byte) error {
+	// encrypt the plaintext
+	ciphertext, err := cryptoutils.AesEncrypt(message, t.sessionKey)
+	if err != nil {
+		return err
+	}
+	// create a signature of the plaintext message and append it to the ciphertext
+	signature, err := cryptoutils.RsaSign(t.userPrvKey, message)
+	if err != nil {
+		return err
+	}
+	message = append(signature, ciphertext...)
+	// send the message and get the response
+	responseBuf := make([]byte, 1)
+	t.outgoing.Write(message)
+	t.outgoing.Read(responseBuf)
+	if responseBuf[0] != 0x0 {
+		return errors.New("message not recieved")
+	}
+	return nil
+}
+
+func (t tunnel) AwaitMessage() ([]byte, error) {
+	_, messageRaw, err := RecvAll(t.incoming)
+	if err != nil {
+		return nil, err
+	}
+	// parse the message
+	if len(messageRaw) < cryptoutils.AES_MIN_CIPHERTEXT_SIZE+cryptoutils.SIGNATURE_SIZE {
+		return nil, errors.New("invalid message recieved")
+	}
+	signature := messageRaw[:cryptoutils.SIGNATURE_SIZE]
+	cipherext := messageRaw[cryptoutils.SIGNATURE_SIZE:]
+	message, err := cryptoutils.AesDecrypt(cipherext, t.sessionKey)
+	if err != nil {
+		return nil, err
+	}
+	if !cryptoutils.RsaVerify(t.peerPubKey, message, signature) {
+		return nil, errors.New("invalid message recieved")
+	}
+	return message, nil
+}
