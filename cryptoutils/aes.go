@@ -19,6 +19,13 @@ func GenAesKey() []byte {
 	return key
 }
 
+// generates a randomized nonce to be used for key challenges
+func GenNonce() []byte {
+	nonce := make([]byte, 16)
+	rand.Read(nonce)
+	return nonce
+}
+
 // encrypts a provided plaintext with AES256 in GCM mode, and appends a nonce to the start of the ciphertext
 func AesEncrypt(plaintext []byte, key []byte) ([]byte, error) {
 	// validate the size of the key
