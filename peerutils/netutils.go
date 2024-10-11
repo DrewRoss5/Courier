@@ -147,7 +147,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	if err != nil {
 		return nil, err
 	}
-	return &tunnel{sessionKey: sessionKey, peerPubKey: peerPub, userPrvKey: prvKey, incoming: incoming, outgoing: outgoing, peer: peer, user: initiator}, nil
+	return &tunnel{sessionKey: sessionKey, PeerPubKey: peerPub, userPrvKey: prvKey, Incoming: incoming, Outgoing: outgoing, Peer: peer, User: initiator}, nil
 }
 
 func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever user) (*tunnel, error) {
@@ -250,5 +250,5 @@ func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever user) (*tun
 	if err != nil {
 		return nil, err
 	}
-	return &tunnel{sessionKey: sessionKey, peerPubKey: peerPub, userPrvKey: prvKey, incoming: incoming, outgoing: outgoing, peer: peer, user: reciever}, nil
+	return &tunnel{sessionKey: sessionKey, PeerPubKey: peerPub, userPrvKey: prvKey, Incoming: incoming, Outgoing: outgoing, Peer: peer, User: reciever}, nil
 }

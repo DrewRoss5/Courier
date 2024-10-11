@@ -10,12 +10,12 @@ import (
 
 type tunnel struct {
 	sessionKey []byte
-	peerPubKey rsa.PublicKey
+	PeerPubKey rsa.PublicKey
 	userPrvKey rsa.PrivateKey
-	incoming   net.Conn
-	outgoing   net.Conn
-	peer       user
-	user       user
+	Incoming   net.Conn
+	Outgoing   net.Conn
+	Peer       user
+	User       user
 }
 
 // encrypts and sends the provided message through this tunnel
@@ -33,8 +33,8 @@ func (t tunnel) SendMessage(message []byte) error {
 	message = append(signature, ciphertext...)
 	// send the message and get the response
 	responseBuf := make([]byte, 1)
-	t.outgoing.Write(message)
-	t.outgoing.Read(responseBuf)
+	t.Outgoing.Write(message)
+	t.Outgoing.Read(responseBuf)
 	if responseBuf[0] != 0x0 {
 		return errors.New("message not recieved")
 	}
@@ -42,7 +42,7 @@ func (t tunnel) SendMessage(message []byte) error {
 }
 
 func (t tunnel) AwaitMessage() ([]byte, error) {
-	_, messageRaw, err := RecvAll(t.incoming)
+	_, messageRaw, err := RecvAll(t.Incoming)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (t tunnel) AwaitMessage() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !cryptoutils.RsaVerify(t.peerPubKey, message, signature) {
+	if !cryptoutils.RsaVerify(t.PeerPubKey, message, signature) {
 		return nil, errors.New("invalid message recieved")
 	}
 	return message, nil
