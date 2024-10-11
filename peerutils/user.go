@@ -1,6 +1,6 @@
 package peerutils
 
-type user struct {
+type User struct {
 	Name  string
 	Color string
 }

@@ -14,8 +14,8 @@ type tunnel struct {
 	userPrvKey rsa.PrivateKey
 	Incoming   net.Conn
 	Outgoing   net.Conn
-	Peer       user
-	User       user
+	Peer       User
+	User       User
 }
 
 // encrypts and sends the provided message through this tunnel
