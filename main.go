@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/DrewRoss5/courier/cryptoutils"
+	"github.com/DrewRoss5/courier/peerutils"
 )
 
 func main() {
@@ -13,7 +14,7 @@ func main() {
 		fmt.Println("This program accepts exactly two arguments ")
 		return
 	}
-	//username := os.Args[1]
+	username := os.Args[1]
 	command := os.Args[2]
 	// determine if the user is testing initating or recieving code
 	switch command {
@@ -29,7 +30,21 @@ func main() {
 		}
 		fmt.Println("Keys created successfully")
 	case "recieve":
-
+		fmt.Print("Key path: ")
+		var keyPath string
+		fmt.Scanf("%s", &keyPath)
+		prvKey, pubKey, err := cryptoutils.ImportRsa(keyPath)
+		if err != nil {
+			fmt.Println("Error: failed to  import the rsa keys")
+			return
+		}
+		user := peerutils.User{Name: username, Color: "white"}
+		fmt.Println("Awaiting connection...")
+		tunnel, err := peerutils.AwaitPeer(pubKey, prvKey, user)
+		if err != nil {
+			fmt.Printf("Error: %v\n", err.Error())
+		}
+		fmt.Printf("Established connection with %v at %v", tunnel.Peer.Name, tunnel.Incoming.RemoteAddr().String())
 	case "initate":
 
 	default:
