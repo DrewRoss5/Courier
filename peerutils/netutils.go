@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net"
+	"time"
 
 	"github.com/DrewRoss5/courier/cryptoutils"
 )
@@ -13,6 +14,7 @@ const BUF_SIZE = 1024
 
 // message codes wil be defined here
 const RES_OK byte = 0x0
+const RES_ERR byte = 0x1
 const MESSAGE_INIT byte = 0x1
 const MESSAGE_TXT byte = 0x2
 const DISCONNECT byte = 0x3
@@ -85,20 +87,20 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	// create and encrypt a challegene
 	checksum := cryptoutils.GenNonce()
 	checksumCiphertext, _ := cryptoutils.AesEncrypt(checksum, sessionKey)
-	checksumResponse := make([]byte, 16)
 	_, err = conn.Write(checksumCiphertext)
 	if err != nil {
 		return nil, err
 	}
-	_, err = conn.Read(checksumResponse)
+	_, checksumResponse, err := RecvAll(conn)
 	if err != nil {
 		return nil, err
 	}
-	responsePlaintext, err := cryptoutils.AesDecrypt(checksumResponse, sessionKey)
+	responsePlaintext, err := cryptoutils.RsaDecrypt(&prvKey, checksumResponse)
 	if err != nil {
 		return nil, err
 	}
 	if !compSlices(checksum, responsePlaintext) {
+		conn.Write([]byte{RES_ERR})
 		return nil, errors.New("failed to verify the session key with peer")
 	}
 	// send the information of this user to the peer
@@ -107,7 +109,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 		return nil, err
 	}
 	userCiphertext, _ := cryptoutils.AesEncrypt(userJson, sessionKey)
-	_, err = conn.Write(userCiphertext)
+	_, err = conn.Write(append([]byte{RES_OK}, userCiphertext...))
 	if err != nil {
 		return nil, err
 	}
@@ -125,8 +127,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	if err != nil {
 		return nil, err
 	}
-	response = make([]byte, 1)
-	response[0] = RES_OK
+	response = []byte{RES_OK}
 	_, err = conn.Write(response)
 	if err != nil {
 		return nil, err
@@ -141,9 +142,113 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 		return nil, err
 	}
 	// connect to the peer's incoming port
+	time.Sleep(3 * time.Second) // this is a very hacky way of avoiding a race condition and needs to be fixed
 	outgoing, err := net.Dial("tcp", addr+":54002")
 	if err != nil {
 		return nil, err
 	}
 	return &tunnel{sessionKey: sessionKey, peerPubKey: peerPub, userPrvKey: prvKey, incoming: incoming, outgoing: outgoing, peer: peer, user: initiator}, nil
+}
+
+func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever user) (*tunnel, error) {
+	listener, err := net.Listen("tcp", "127.0.0.1:54000")
+	if err != nil {
+		return nil, err
+	}
+	conn, err := listener.Accept()
+	if err != nil {
+		return nil, err
+	}
+	_, message, err := RecvAll(conn)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: implement additional features for differing requests
+	if message[0] != MESSAGE_INIT {
+		return nil, errors.New("unrecognized request")
+	}
+	peerPem := message[1:]
+	peerPub, err := cryptoutils.ImportRsaPub(peerPem)
+	if err != nil {
+		conn.Write([]byte{RES_ERR})
+		return nil, err
+	}
+	conn.Write(append([]byte{RES_OK}, cryptoutils.ExportRsaPub(&pubKey)...))
+	// await the session key
+	_, keyCiphertext, err := RecvAll(conn)
+	if err != nil {
+		conn.Write([]byte{RES_ERR})
+		return nil, err
+	}
+	sessionKey, err := cryptoutils.RsaDecrypt(&prvKey, keyCiphertext)
+	if err != nil {
+		conn.Write([]byte{RES_ERR})
+		return nil, err
+	}
+	conn.Write([]byte{RES_OK})
+	// await the challenge
+	_, challenge, err := RecvAll(conn)
+	if err != nil {
+		return nil, err
+	}
+	challenge, err = cryptoutils.AesDecrypt(challenge, sessionKey)
+	if err != nil {
+		conn.Write([]byte{RES_ERR})
+		return nil, err
+	}
+	challengeResponse, err := cryptoutils.RsaEncrypt(&peerPub, challenge)
+	if err != nil {
+		conn.Write([]byte{RES_ERR})
+		return nil, err
+	}
+	conn.Write(challengeResponse)
+	// await the verification
+	_, response, err := RecvAll(conn)
+	if err != nil {
+		return nil, err
+	}
+	if response[0] != RES_OK {
+		return nil, errors.New("failed to initialize the connection")
+	}
+	// recieve the peer's information
+	peerInfo, err := cryptoutils.AesDecrypt(response[1:], sessionKey)
+	if err != nil {
+		conn.Write([]byte{RES_ERR})
+		return nil, err
+	}
+	var peer user
+	err = json.Unmarshal(peerInfo, &peer)
+	if err != nil {
+		conn.Write([]byte{RES_ERR})
+		return nil, err
+	}
+	// send the peer the user's information
+	userInfo, _ := json.Marshal(reciever)
+	userCiphertext, _ := cryptoutils.AesEncrypt(userInfo, sessionKey)
+	conn.Write(userCiphertext)
+	_, response, err = RecvAll(conn)
+	if err != nil {
+		conn.Write([]byte{RES_ERR})
+		return nil, err
+	}
+	if response[0] != RES_OK {
+		return nil, errors.New("failed to initiate the connection")
+	}
+	// connect to the peer's incoming port
+	peerAddr := conn.RemoteAddr().String()
+	time.Sleep(3 * time.Second) // this is a very hacky way of avoiding a race condition and needs to be fixed
+	outgoing, err := net.Dial("tcp", peerAddr+":54001")
+	if err != nil {
+		return nil, err
+	}
+	// await the peer's connection to the incoming port
+	listener, err = net.Listen("tcp", peerAddr+":54002")
+	if err != nil {
+		return nil, err
+	}
+	incoming, err := listener.Accept()
+	if err != nil {
+		return nil, err
+	}
+	return &tunnel{sessionKey: sessionKey, peerPubKey: peerPub, userPrvKey: prvKey, incoming: incoming, outgoing: outgoing, peer: peer, user: reciever}, nil
 }

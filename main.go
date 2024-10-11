@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/DrewRoss5/courier/cryptoutils"
+	//"github.com/DrewRoss5/courier/peerutils"
 )
 
 func main() {
