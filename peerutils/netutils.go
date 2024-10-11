@@ -4,6 +4,7 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net"
 	"time"
 
@@ -58,8 +59,11 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	if err != nil {
 		return nil, err
 	}
+	defer conn.Close()
+	fmt.Println("Connection established.\nSending RSA public key...")
 	// send this RSA key, and await the response
 	conn.Write(append([]byte{MESSAGE_INIT}, cryptoutils.ExportRsaPub(&pubKey)...))
+	fmt.Println("Public key sent. Awaiting response...")
 	responseSize, response, err := RecvAll(conn)
 	if err != nil {
 		return nil, err
@@ -76,6 +80,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("Public key recieved.\nSending session key...")
 	// generate, encrypt, and send the session key
 	sessionKey := cryptoutils.GenAesKey()
 	keyCiphertext, _ := cryptoutils.RsaEncrypt(&peerPub, sessionKey)
@@ -84,6 +89,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	if response[0] != RES_OK {
 		return nil, errors.New("failed to verify the session key with peer")
 	}
+	fmt.Println("Session key sent. Sending cheksum...")
 	// create and encrypt a challegene
 	checksum := cryptoutils.GenNonce()
 	checksumCiphertext, _ := cryptoutils.AesEncrypt(checksum, sessionKey)
@@ -103,6 +109,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 		conn.Write([]byte{RES_ERR})
 		return nil, errors.New("failed to verify the session key with peer")
 	}
+	fmt.Println("Checksum verified\nSending user information..")
 	// send the information of this user to the peer
 	userJson, err := json.Marshal(initiator)
 	if err != nil {
@@ -113,6 +120,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("User information sent\nAwaiting peer info...")
 	// recieve and decrypt the peer's info
 	_, peerCiphertext, err := RecvAll(conn)
 	if err != nil || peerCiphertext[0] != RES_OK {
@@ -132,6 +140,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("Peer info recieved. Establishing bidirectional communication...")
 	// await a connection on this incoming port
 	listener, err := net.Listen("tcp", addr+":54001")
 	if err != nil {
@@ -147,6 +156,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("Tunnel established!")
 	return &tunnel{sessionKey: sessionKey, PeerPubKey: peerPub, userPrvKey: prvKey, Incoming: incoming, Outgoing: outgoing, Peer: peer, User: initiator}, nil
 }
 
@@ -159,6 +169,8 @@ func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever User) (*tun
 	if err != nil {
 		return nil, err
 	}
+	defer conn.Close()
+	fmt.Println("Connection initialized\nAwaiting peer pulic key...")
 	_, message, err := RecvAll(conn)
 	if err != nil {
 		return nil, err
@@ -173,7 +185,9 @@ func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever User) (*tun
 		conn.Write([]byte{RES_ERR})
 		return nil, err
 	}
+	fmt.Println("Peer public key recieved\nSending user public key...")
 	conn.Write(append([]byte{RES_OK}, cryptoutils.ExportRsaPub(&pubKey)...))
+	fmt.Println("Public key sent\nAwaiting encrypyed session key...")
 	// await the session key
 	_, keyCiphertext, err := RecvAll(conn)
 	if err != nil {
@@ -186,6 +200,7 @@ func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever User) (*tun
 		return nil, err
 	}
 	conn.Write([]byte{RES_OK})
+	fmt.Println("Session key recieved\nAwaiting checksum...")
 	// await the challenge
 	_, challenge, err := RecvAll(conn)
 	if err != nil {
@@ -202,6 +217,7 @@ func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever User) (*tun
 		return nil, err
 	}
 	conn.Write(challengeResponse)
+	fmt.Println("Checksum sent\nAwaiting verification...")
 	// await the verification
 	_, response, err := RecvAll(conn)
 	if err != nil {
@@ -210,6 +226,7 @@ func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever User) (*tun
 	if response[0] != RES_OK {
 		return nil, errors.New("failed to initialize the connection")
 	}
+	fmt.Println("Checksum verified\nAwaiting peer info...")
 	// recieve the peer's information
 	peerInfo, err := cryptoutils.AesDecrypt(response[1:], sessionKey)
 	if err != nil {
@@ -222,6 +239,7 @@ func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever User) (*tun
 		conn.Write([]byte{RES_ERR})
 		return nil, err
 	}
+	fmt.Println("Peer info recieved\nSending user info...")
 	// send the peer the user's information
 	userInfo, _ := json.Marshal(reciever)
 	userCiphertext, _ := cryptoutils.AesEncrypt(userInfo, sessionKey)
@@ -234,6 +252,7 @@ func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever User) (*tun
 	if response[0] != RES_OK {
 		return nil, errors.New("failed to initiate the connection")
 	}
+	fmt.Println("User info sent\nEstablishing biderectional connection...")
 	// connect to the peer's incoming port
 	peerAddr := conn.RemoteAddr().String()
 	time.Sleep(3 * time.Second) // this is a very hacky way of avoiding a race condition and needs to be fixed
