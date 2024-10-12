@@ -38,6 +38,8 @@ func (c *Chatroom) AwaitMessage() error {
 		c.pushMessage(&messageStr, &c.tunnel.Peer)
 	case MESSAGE_DISCONNECT:
 		c.active = false
+	default:
+		return errors.New("chatroom: invalid message recieved")
 	}
 	return nil
 }
