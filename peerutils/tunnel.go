@@ -56,10 +56,11 @@ func (t tunnel) AwaitMessage() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	message = stripZeroes(message)
 	if !cryptoutils.RsaVerify(t.PeerPubKey, message, signature) {
-		return nil, errors.New("invalid message recieved")
+		return nil, errors.New("failed to verify RSA signature")
 	}
-	return stripZeroes(message), nil
+	return message, nil
 }
 
 // quits the connection and sends a message to the peer indicating such
