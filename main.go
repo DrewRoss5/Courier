@@ -45,24 +45,9 @@ func main() {
 			fmt.Printf("Error: %v\n", err.Error())
 			return
 		}
-		// send an example message to ensure data is communicated properly
-		err = tunnel.SendMessage([]byte("Hello, Courier!"))
-		if err != nil {
-			fmt.Printf("%v\n", err.Error())
-			return
-		}
-		// receive a message to ensure that data is recieved properly
-		message, err := tunnel.AwaitMessage()
-		if err != nil {
-			fmt.Printf("%v\n", err.Error())
-			return
-		}
-		fmt.Printf("%v: %v\n", tunnel.Peer.Name, string(message))
-		fmt.Println("Disconnecting...")
-		err = tunnel.Shutdown()
-		if err != nil {
-			fmt.Printf("Failed to disconnect: %v\n", err.Error())
-		}
+		room := peerutils.Chatroom{Tunnel: *tunnel, Active: true}
+		room.AwaitMessage()
+		room.DisplayMessages()
 	case "initiate":
 		fmt.Print("Key path: ")
 		var keyPath string
@@ -82,19 +67,10 @@ func main() {
 			return
 		}
 		fmt.Printf("Established connection with %v at %v\n", tunnel.Peer.Name, tunnel.Incoming.RemoteAddr().String())
-		// receive a message to ensure that data is recieved properly
-		message, err := tunnel.AwaitMessage()
-		if err != nil {
-			fmt.Printf("%v\n", err.Error())
-			return
-		}
-		fmt.Printf("%v: %v\n", tunnel.Peer.Name, string(message))
-		// send a message
-		err = tunnel.SendMessage([]byte("Oi oi."))
-		if err != nil {
-			fmt.Printf("%v\n", err.Error())
-			return
-		}
+		room := peerutils.Chatroom{Tunnel: *tunnel, Active: true}
+		tmp := "Welcome back, Mr. Navigator"
+		room.SendMessage(&tmp)
+		room.DisplayMessages()
 
 	default:
 		fmt.Println("Unrecognized command")

@@ -1,31 +1,34 @@
 package peerutils
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 const MAX_MSG_COUNT = 50
 
 type Chatroom struct {
-	tunnel   tunnel
-	messages []*message
-	active   bool
+	Tunnel   tunnel
+	Messages []Message
+	Active   bool
 }
 
 // appends a new message to the chat history
 func (c *Chatroom) pushMessage(msg *string, user *User) {
 	newMessage := NewMessage(*msg, user)
-	c.messages = append(c.messages, newMessage)
-	// delete old messages if the archive is too large TODO: Make this an optional feature and not mandated
-	if len(c.messages) > MAX_MSG_COUNT {
-		c.messages = c.messages[1:]
+	c.Messages = append(c.Messages, *newMessage)
+	// delete old Messages if the archive is too large TODO: Make this an optional feature and not mandated
+	if len(c.Messages) > MAX_MSG_COUNT {
+		c.Messages = c.Messages[1:]
 	}
 }
 
 // awaits an incoming message, and handles it according to its code
 func (c *Chatroom) AwaitMessage() error {
-	if !c.active {
-		return errors.New("chatroom: this chatroom is no longer active")
+	if !c.Active {
+		return errors.New("chatroom: this chatroom is no longer Active")
 	}
-	msg, err := c.tunnel.AwaitMessage()
+	msg, err := c.Tunnel.AwaitMessage()
 	if err != nil {
 		return err
 	}
@@ -34,10 +37,11 @@ func (c *Chatroom) AwaitMessage() error {
 	msg = msg[1:]
 	switch msgCode {
 	case MESSAGE_TXT:
+		fmt.Println("Message recieved")
 		messageStr := string(msg)
-		c.pushMessage(&messageStr, &c.tunnel.Peer)
+		c.pushMessage(&messageStr, &c.Tunnel.Peer)
 	case MESSAGE_DISCONNECT:
-		c.active = false
+		c.Active = false
 	default:
 		return errors.New("chatroom: invalid message recieved")
 	}
@@ -48,18 +52,22 @@ func (c *Chatroom) AwaitMessage() error {
 func (c *Chatroom) SendMessage(msg *string) error {
 	tmp := []byte(*msg)
 	msgBytes := append([]byte{MESSAGE_TXT}, tmp...)
-	err := c.tunnel.SendMessage(msgBytes)
+	err := c.Tunnel.SendMessage(msgBytes)
 	if err != nil {
 		return err
 	}
-	c.pushMessage(msg, &c.tunnel.User)
+	c.pushMessage(msg, &c.Tunnel.User)
 	return nil
 
 }
 
-// displays all of the messages currently in the archive
+// displays all of the Messages currently in the archive
 func (c Chatroom) DisplayMessages() {
-	for _, msg := range c.messages {
+	if len(c.Messages) == 0 {
+		fmt.Printf("%vNo messages to display\033[0m\n", Gray)
+		return
+	}
+	for _, msg := range c.Messages {
 		msg.Display()
 	}
 }
