@@ -52,9 +52,6 @@ func AesDecrypt(ciphertext []byte, key []byte) ([]byte, error) {
 	if len(key) != AES_KEY_SIZE {
 		return nil, errors.New("invalid AES key size")
 	}
-	if len(ciphertext) < AES_MIN_CIPHERTEXT_SIZE || ((len(ciphertext)-12)%aes.BlockSize) != 0 {
-		return nil, errors.New("invalid AES ciphertext size")
-	}
 	// create the cipher
 	aesCipher, err := aes.NewCipher(key)
 	if err != nil {
