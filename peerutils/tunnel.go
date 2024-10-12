@@ -61,3 +61,15 @@ func (t tunnel) AwaitMessage() ([]byte, error) {
 	}
 	return stripZeroes(message), nil
 }
+
+// quits the connection and sends a message to the peer indicating such
+func (t tunnel) Shutdown() error {
+	// send a message to the peer indicating that this tunnel is being closed
+	err := t.SendMessage([]byte{MESSAGE_DISCONNECT})
+	if err != nil {
+		return err
+	}
+	t.Incoming.Close()
+	t.Outgoing.Close()
+	return nil
+}
