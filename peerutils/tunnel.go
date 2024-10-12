@@ -59,5 +59,5 @@ func (t tunnel) AwaitMessage() ([]byte, error) {
 	if !cryptoutils.RsaVerify(t.PeerPubKey, message, signature) {
 		return nil, errors.New("invalid message recieved")
 	}
-	return message, nil
+	return stripZeroes(message), nil
 }
