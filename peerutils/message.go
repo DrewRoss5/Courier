@@ -14,20 +14,18 @@ const Cyan = "\033[36m"
 const Gray = "\033[37m"
 const White = "\033[97m"
 
-type message struct {
+type Message struct {
 	content  string
 	timeSent string
 	sender   *User
 }
 
-func (m message) Display() {
-	fmt.Printf("%v%v\033[0m@%v: %v\n", m.sender.Color, m.sender.Name, m.timeSent, m.content)
+func (m Message) Display() {
+	fmt.Printf("%v%v\033[0m @ %v%v\033[0m: %v\n", m.sender.Color, m.sender.Name, Yellow, m.timeSent, m.content)
 }
 
 // constructs a new message, making a note of the current timestamp
-func NewMessage(content string, usr *User) *message {
-	// get the current time in minutes and seconds
-	now := time.Now()
-	timeStr := fmt.Sprintf("%v:%v", now.Hour(), now.Minute())
-	return &message{content: content, sender: usr, timeSent: timeStr}
+func NewMessage(content string, usr *User) *Message {
+	timeStr := time.Now().Format("15:04:05")
+	return &Message{content: content, sender: usr, timeSent: timeStr}
 }
