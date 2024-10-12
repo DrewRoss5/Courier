@@ -38,7 +38,7 @@ func main() {
 			fmt.Println("Error: failed to  import the rsa keys")
 			return
 		}
-		user := peerutils.User{Name: username, Color: "white"}
+		user := peerutils.User{Name: username, Color: peerutils.Blue}
 		fmt.Println("Awaiting connection...")
 		tunnel, err := peerutils.AwaitPeer(pubKey, prvKey, user)
 		if err != nil {
@@ -75,7 +75,7 @@ func main() {
 		var addr string
 		fmt.Print("Peer address: ")
 		fmt.Scanf("%s", addr)
-		user := peerutils.User{Name: username, Color: "white"}
+		user := peerutils.User{Name: username, Color: peerutils.Red}
 		tunnel, err := peerutils.ConnectPeer(addr, pubKey, prvKey, user)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err.Error())
