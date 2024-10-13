@@ -26,11 +26,13 @@ func (ci ChatInterface) Display() {
 
 // awaits a message and displays it (along with all other messages) once recieved
 func (ci *ChatInterface) AwaitMessage() {
-	err := ci.room.AwaitMessage()
-	ci.Display()
-	fmt.Print(":")
-	if err != nil {
-		fmt.Printf("%vError: %v%v\n", peerutils.Red, err.Error(), peerutils.ColorReset)
+	for ci.room.Active {
+		err := ci.room.AwaitMessage()
+		ci.Display()
+		fmt.Print(":")
+		if err != nil {
+			fmt.Printf("%vError: %v%v\n", peerutils.Red, err.Error(), peerutils.ColorReset)
+		}
 	}
 }
 

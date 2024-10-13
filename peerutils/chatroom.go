@@ -38,7 +38,6 @@ func (c *Chatroom) AwaitMessage() error {
 	msg = msg[1:]
 	switch msgCode {
 	case MESSAGE_TXT:
-		fmt.Println("Message recieved")
 		messageStr := string(msg)
 		c.pushMessage(&messageStr, &c.Tunnel.Peer)
 	case MESSAGE_DISCONNECT:

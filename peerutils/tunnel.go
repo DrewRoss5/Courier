@@ -44,11 +44,8 @@ func (t Tunnel) SendMessage(message []byte) error {
 func (t Tunnel) AwaitMessage() ([]byte, error) {
 	_, messageRaw, err := RecvAll(t.Incoming)
 	if err != nil {
+		t.Incoming.Write([]byte{RES_ERR})
 		return nil, err
-	}
-	// parse the message
-	if len(messageRaw) < cryptoutils.AES_MIN_CIPHERTEXT_SIZE+cryptoutils.SIGNATURE_SIZE {
-		return nil, errors.New("invalid message recieved")
 	}
 	signature := messageRaw[:cryptoutils.SIGNATURE_SIZE]
 	cipherext := messageRaw[cryptoutils.SIGNATURE_SIZE:]
