@@ -9,7 +9,7 @@ import (
 const MAX_MSG_COUNT = 50
 
 type Chatroom struct {
-	Tunnel   tunnel
+	Tunnel   Tunnel
 	Messages []Message
 	Active   bool
 }
@@ -65,7 +65,7 @@ func (c *Chatroom) SendMessage(msg *string) error {
 // displays all of the Messages currently in the archive
 func (c Chatroom) DisplayMessages() {
 	if len(c.Messages) == 0 {
-		fmt.Printf("%vNo messages to display\033[0m\n", Gray)
+		fmt.Printf("%vNo messages to display%v\n", Gray, ColorReset)
 		return
 	}
 	for _, msg := range c.Messages {
@@ -76,17 +76,17 @@ func (c Chatroom) DisplayMessages() {
 // handles a chat command, and returns the string to be output to the terminal after running
 func (c *Chatroom) HandleCommand(command string, args []string) string {
 	switch command {
-	case "clear":
+	case ">clear":
 		clear(c.Messages)
 		exec.Command("clear")
-		return fmt.Sprintf("%vMessages cleared\033[0m\n", Gray)
-	case "disconnect":
+		return fmt.Sprintf("%vMessages cleared%v\n", Gray, ColorReset)
+	case ">disconnect":
 		err := c.Tunnel.Shutdown()
 		if err != nil {
-			return fmt.Sprintf("%vError: failed to close the chatroom\033[0m\n", Red)
+			return fmt.Sprintf("%vError: failed to close the chatroom%v\n", Red, ColorReset)
 		}
-		return fmt.Sprintf("%vChat closed.\033[0m\n", Gray)
+		return fmt.Sprintf("%vChat closed.%v\n", Gray, ColorReset)
 	default:
-		return fmt.Sprintf("%vError: unrecognized command\033[0m\n", Red)
+		return fmt.Sprintf("%vError: unrecognized command%v\n", Red, ColorReset)
 	}
 }

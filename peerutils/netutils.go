@@ -66,7 +66,7 @@ func RecvAll(conn net.Conn) (int, []byte, error) {
 }
 
 // attempts to connect to a peer, returning a tunnel if the peer can be reached
-func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initiator User) (*tunnel, error) {
+func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initiator User) (*Tunnel, error) {
 	conn, err := net.Dial("tcp", addr+":54000")
 	if err != nil {
 		return nil, err
@@ -158,10 +158,10 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	if err != nil {
 		return nil, err
 	}
-	return &tunnel{sessionKey: sessionKey, PeerPubKey: peerPub, userPrvKey: prvKey, Incoming: incoming, Outgoing: outgoing, Peer: peer, User: initiator}, nil
+	return &Tunnel{sessionKey: sessionKey, PeerPubKey: peerPub, userPrvKey: prvKey, Incoming: incoming, Outgoing: outgoing, Peer: peer, User: initiator}, nil
 }
 
-func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever User) (*tunnel, error) {
+func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever User) (*Tunnel, error) {
 	listener, err := net.Listen("tcp", "127.0.0.1:54000")
 	if err != nil {
 		return nil, err
@@ -264,5 +264,5 @@ func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever User) (*tun
 	if err != nil {
 		return nil, err
 	}
-	return &tunnel{sessionKey: sessionKey, PeerPubKey: peerPub, userPrvKey: prvKey, Incoming: incoming, Outgoing: outgoing, Peer: peer, User: reciever}, nil
+	return &Tunnel{sessionKey: sessionKey, PeerPubKey: peerPub, userPrvKey: prvKey, Incoming: incoming, Outgoing: outgoing, Peer: peer, User: reciever}, nil
 }

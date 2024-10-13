@@ -8,7 +8,7 @@ import (
 	"github.com/DrewRoss5/courier/cryptoutils"
 )
 
-type tunnel struct {
+type Tunnel struct {
 	sessionKey []byte
 	PeerPubKey rsa.PublicKey
 	userPrvKey rsa.PrivateKey
@@ -18,8 +18,8 @@ type tunnel struct {
 	User       User
 }
 
-// encrypts and sends the provided message through this tunnel
-func (t tunnel) SendMessage(message []byte) error {
+// encrypts and sends the provided message through this Tunnel
+func (t Tunnel) SendMessage(message []byte) error {
 	// encrypt the plaintext
 	ciphertext, err := cryptoutils.AesEncrypt(message, t.sessionKey)
 	if err != nil {
@@ -36,12 +36,12 @@ func (t tunnel) SendMessage(message []byte) error {
 	t.Outgoing.Write(message)
 	t.Outgoing.Read(responseBuf)
 	if responseBuf[0] != 0x0 {
-		return errors.New("message not recieved")
+		return errors.New("message not validated")
 	}
 	return nil
 }
 
-func (t tunnel) AwaitMessage() ([]byte, error) {
+func (t Tunnel) AwaitMessage() ([]byte, error) {
 	_, messageRaw, err := RecvAll(t.Incoming)
 	if err != nil {
 		return nil, err
@@ -54,18 +54,22 @@ func (t tunnel) AwaitMessage() ([]byte, error) {
 	cipherext := messageRaw[cryptoutils.SIGNATURE_SIZE:]
 	message, err := cryptoutils.AesDecrypt(cipherext, t.sessionKey)
 	if err != nil {
+		t.Incoming.Write([]byte{RES_ERR})
 		return nil, err
 	}
 	message = stripZeroes(message)
 	if !cryptoutils.RsaVerify(t.PeerPubKey, message, signature) {
+		t.Incoming.Write([]byte{RES_ERR})
 		return nil, errors.New("failed to verify RSA signature")
 	}
+	// send the response to the peer
+	t.Incoming.Write([]byte{RES_OK})
 	return message, nil
 }
 
 // quits the connection and sends a message to the peer indicating such
-func (t tunnel) Shutdown() error {
-	// send a message to the peer indicating that this tunnel is being closed
+func (t Tunnel) Shutdown() error {
+	// send a message to the peer indicating that this Tunnel is being closed
 	err := t.SendMessage([]byte{MESSAGE_DISCONNECT})
 	if err != nil {
 		return err
