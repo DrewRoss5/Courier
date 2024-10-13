@@ -32,6 +32,7 @@ func (ci *ChatInterface) AwaitMessage() {
 		fmt.Print(":")
 		if err != nil {
 			fmt.Printf("%vError: %v%v\n", peerutils.Red, err.Error(), peerutils.ColorReset)
+			ci.room.Active = false
 		}
 	}
 }
@@ -53,6 +54,8 @@ func (ci *ChatInterface) AwaitInput() {
 		if len(tmp) > 1 {
 			args = tmp[1:]
 		}
+		// remove the newline from the command
+		command = command[:len(command)-1]
 		output := ci.room.HandleCommand(command, args)
 		ci.Display()
 		fmt.Println(output)
@@ -69,6 +72,7 @@ func (ci *ChatInterface) Run() {
 	for ci.room.Active {
 		ci.AwaitInput()
 	}
+	fmt.Printf("%vConnection terminated%v\n", peerutils.Red, peerutils.ColorReset)
 }
 
 // initializes a ChatInterface, given the tunnel

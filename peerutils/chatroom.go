@@ -74,9 +74,10 @@ func (c Chatroom) DisplayMessages() {
 
 // handles a chat command, and returns the string to be output to the terminal after running
 func (c *Chatroom) HandleCommand(command string, args []string) string {
+
 	switch command {
 	case ">clear":
-		clear(c.Messages)
+		c.Messages = []Message{}
 		exec.Command("clear")
 		return fmt.Sprintf("%vMessages cleared%v\n", Gray, ColorReset)
 	case ">disconnect":
@@ -86,6 +87,6 @@ func (c *Chatroom) HandleCommand(command string, args []string) string {
 		}
 		return fmt.Sprintf("%vChat closed.%v\n", Gray, ColorReset)
 	default:
-		return fmt.Sprintf("%vError: unrecognized command%v\n", Red, ColorReset)
+		return fmt.Sprintf("%vError:%v unrecognized command\n", Red, ColorReset)
 	}
 }
