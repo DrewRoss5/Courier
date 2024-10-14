@@ -106,6 +106,6 @@ func main() {
 		chatInterface.Run()
 
 	default:
-		fmt.Printf("Unrecognized command: %v", command)
+		fmt.Printf("Unrecognized command: %v\n", command)
 	}
 }
