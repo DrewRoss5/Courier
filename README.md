@@ -2,10 +2,7 @@
 CourierCLI, an anonymous command-line messaging app. Messages are end-to-end encrypted using AES256 operating in GCM mode.
 
 # Roadmap/ToDo
-- Write proper documentation
-- Complete the first version of the interface
-  - Finish command support
-  - Add an in-app command pallete for recieving/creating connections
+- Add an in-app command pallete for recieving/creating connections
 - Add more robust error handling
 - Implement support for password protecting private keys
 - Allow for archiving messages
@@ -13,6 +10,7 @@ CourierCLI, an anonymous command-line messaging app. Messages are end-to-end enc
 - Allow for multiple chats simulataneously (each chat having its own "tab")
 - Add support for Windows
 - Impement user IDs based on the RSA Private Key for user verification 
+    - This can likely be implemented using a signature of arbitrary bytes 
 
 # Installation and Setup
 ## Linux Installation
