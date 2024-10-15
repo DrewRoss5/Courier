@@ -175,7 +175,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 }
 
 func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever User) (*Tunnel, error) {
-	listener, err := net.Listen("tcp", "127.0.0.1:54000")
+	listener, err := net.Listen("tcp", ":54000")
 	if err != nil {
 		return nil, err
 	}
