@@ -250,7 +250,6 @@ func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever User) (*Tun
 		return nil, err
 	}
 	// validate the peer's ID
-	fmt.Printf("Peer id: %v", peer.Id)
 	if !ValidateId(peer.Id, &peerPub) {
 		conn.Write([]byte{RES_ERR})
 		return nil, err
