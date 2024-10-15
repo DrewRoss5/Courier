@@ -9,8 +9,6 @@ CourierCLI, an anonymous command-line messaging app. Messages are end-to-end enc
 - Add additional chat commands
 - Allow for multiple chats simulataneously (each chat having its own "tab")
 - Add support for Windows
-- Impement user IDs based on the RSA Private Key for user verification 
-    - This can likely be implemented using a signature of arbitrary bytes 
 
 # Installation and Setup
 ## Linux Installation
