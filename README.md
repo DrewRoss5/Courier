@@ -64,3 +64,5 @@ More commands will be added in future builds
   - This only affects the client and has no effect on the peer's message history
 - Disconnect:
   - Terminates the connection with the peer
+- Peerid: 
+    - Returns the peer's user ID. Because Courier is P2P with no centralized infrastructure, these IDs are the only way to verify a peer's identity, so it's important to ensure your peer has the ID you expect them to have. 
