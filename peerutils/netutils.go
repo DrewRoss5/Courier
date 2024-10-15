@@ -4,6 +4,7 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net"
 	"strings"
 	"time"
@@ -138,6 +139,10 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	if err != nil {
 		return nil, err
 	}
+	// validate the peer's ID
+	if !ValidateId(peer.Id, &peerPub) {
+		return nil, err
+	}
 	response = []byte{RES_OK}
 	_, err = conn.Write(response)
 	if err != nil {
@@ -233,6 +238,12 @@ func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever User) (*Tun
 	var peer User
 	err = json.Unmarshal(stripZeroes(peerInfo), &peer)
 	if err != nil {
+		conn.Write([]byte{RES_ERR})
+		return nil, err
+	}
+	// validate the peer's ID
+	fmt.Printf("Peer id: %v", peer.Id)
+	if !ValidateId(peer.Id, &peerPub) {
 		conn.Write([]byte{RES_ERR})
 		return nil, err
 	}

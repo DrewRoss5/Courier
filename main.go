@@ -54,7 +54,12 @@ func login() (rsa.PrivateKey, rsa.PublicKey, peerutils.User) {
 		fmt.Println("Invalid color")
 		os.Exit(1)
 	}
-	user := peerutils.User{Name: username, Color: color}
+	// generate the user's ID
+	id, err := peerutils.GenId(&prvKey)
+	if err != nil {
+		fmt.Printf("%vError:%v Failed to generate a user id. Exiting...\n", peerutils.Red, peerutils.ColorReset)
+	}
+	user := peerutils.User{Name: username, Color: color, Id: id}
 	return prvKey, pubKey, user
 
 }

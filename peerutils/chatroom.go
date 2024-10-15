@@ -3,7 +3,6 @@ package peerutils
 import (
 	"errors"
 	"fmt"
-	"os/exec"
 )
 
 const MAX_MSG_COUNT = 50
@@ -74,18 +73,21 @@ func (c Chatroom) DisplayMessages() {
 
 // handles a chat command, and returns the string to be output to the terminal after running
 func (c *Chatroom) HandleCommand(command string, args []string) string {
-
 	switch command {
+	// clears the message history
 	case ">clear":
 		c.Messages = []Message{}
-		exec.Command("clear")
 		return fmt.Sprintf("%vMessages cleared%v\n", Gray, ColorReset)
+	// terminates the connection
 	case ">disconnect":
 		err := c.Tunnel.Shutdown()
 		if err != nil {
 			return fmt.Sprintf("%vError: failed to close the chatroom%v\n", Red, ColorReset)
 		}
 		return fmt.Sprintf("%vChat closed.%v\n", Gray, ColorReset)
+	// returns the peer's ID
+	case ">peerid":
+		return fmt.Sprintf("%v%v%v Has the ID\n%v%v%v", c.Tunnel.Peer.Color, c.Tunnel.Peer.Name, ColorReset, Green, c.Tunnel.Peer.Id, ColorReset)
 	default:
 		return fmt.Sprintf("%vError:%v unrecognized command\n", Red, ColorReset)
 	}
