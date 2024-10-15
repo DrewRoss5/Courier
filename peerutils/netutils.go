@@ -77,6 +77,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	conn.Write(append([]byte{MESSAGE_INIT}, cryptoutils.ExportRsaPub(&pubKey)...))
 	_, response, err := RecvAll(conn)
 	if err != nil {
+		conn.Write([]byte{RES_ERR})
 		return nil, err
 	}
 	// peer does not initiate the connection
@@ -86,6 +87,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	// parse the public key
 	peerPub, err := cryptoutils.ImportRsaPub(response[1:])
 	if err != nil {
+		conn.Write([]byte{RES_ERR})
 		return nil, err
 	}
 	// generate, encrypt, and send the session key
@@ -94,6 +96,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	conn.Write(keyCiphertext)
 	conn.Read(response)
 	if response[0] != RES_OK {
+		conn.Write([]byte{RES_ERR})
 		return nil, errors.New("failed to verify the session key with peer")
 	}
 	// create and encrypt a challegene
@@ -101,6 +104,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	checksumCiphertext, _ := cryptoutils.AesEncrypt(checksum, sessionKey)
 	_, err = conn.Write(checksumCiphertext)
 	if err != nil {
+		conn.Write([]byte{RES_ERR})
 		return nil, err
 	}
 	_, checksumResponse, err := RecvAll(conn)
@@ -109,6 +113,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	}
 	responsePlaintext, err := cryptoutils.RsaDecrypt(&prvKey, checksumResponse)
 	if err != nil {
+		conn.Write([]byte{RES_ERR})
 		return nil, err
 	}
 	if !compSlices(checksum, responsePlaintext) {
@@ -132,6 +137,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	}
 	peerInfo, err := cryptoutils.AesDecrypt(peerCiphertext[1:], sessionKey)
 	if err != nil {
+		conn.Write([]byte{RES_ERR})
 		return nil, err
 	}
 	var peer User
@@ -151,6 +157,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	// await a connection on this incoming port
 	listener, err := net.Listen("tcp", addr+":54001")
 	if err != nil {
+		conn.Write([]byte{RES_ERR})
 		return nil, err
 	}
 	incoming, err := listener.Accept()
@@ -161,6 +168,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	time.Sleep(time.Second) // this is a very hacky way of avoiding a race condition and needs to be fixed
 	outgoing, err := net.Dial("tcp", addr+":54002")
 	if err != nil {
+		conn.Write([]byte{RES_ERR})
 		return nil, err
 	}
 	return &Tunnel{sessionKey: sessionKey, PeerPubKey: peerPub, userPrvKey: prvKey, Incoming: incoming, Outgoing: outgoing, Peer: peer, User: initiator}, nil
