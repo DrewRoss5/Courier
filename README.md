@@ -8,6 +8,8 @@ CourierCLI, an anonymous command-line messaging app. Messages are end-to-end enc
 - Allow for archiving messages
 - Add additional chat commands
 - Allow for multiple chats simulataneously (each chat having its own "tab")
+  - Once this is implemented, implement peer discovery, allowing for more complete p2p functionality
+- Add support for public "nodes" for peers to discover eachother on
 - Add support for Windows
 
 # Installation and Setup
