@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 
 	"github.com/DrewRoss5/courier/peerutils"
@@ -17,7 +18,12 @@ type ChatInterface struct {
 
 // clears the terminal and displays all messages
 func (ci ChatInterface) Display() {
-	cmd := exec.Command("clear")
+	// determine if we're running on windows, which uses a different clear command
+	clearCommand := "clear"
+	if runtime.GOOS == "windows" {
+		clearCommand = "cls"
+	}
+	cmd := exec.Command(clearCommand)
 	cmd.Stdout = os.Stdout
 	cmd.Run()
 	fmt.Printf("Chat with %v:\n", ci.room.Tunnel.Peer.Name)
