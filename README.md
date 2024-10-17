@@ -28,9 +28,8 @@ Because courier is peer-to-peer, and currently requires peers to know a user's I
 ## Setup: 
 - Courier uses RSA encryption and signing for user veirification and key exchanges.
 - To create a new RSA key pair:
-  - Create a new empty directory to store the keys in
-  - Run `courier init`
-  - When prompted for a "keyPath" enter the relative path to the directory you just created
+  - Run `courier init <keyPath>`
+  - The keyPath is the relative path to the directory you'd like to store your RSA keys for courier. This will generate new directories as needed.
   - The directory will now contain two files: `pub.pem` and `prv.pem` which will be used as your public and private keys respectively.
 
 # Usage:
@@ -41,7 +40,9 @@ Once you've logged in, you'll be greeted with a prompt for a command. As of 10/1
   - Awaits incoming connections.
   - Note: In future versions, this command will be removed and will automatically run in the background
 - clear:
-  - Clears the screen 
+  - Clears the screen
+- exit:
+  - Exits courier
 
 ## Logging in
 When logging into courier you will recieve the following prompts
@@ -66,10 +67,10 @@ To use a command, type ">" in the message entry immediately followed by the comm
 More commands will be added in future builds
 
 ### Current Commands
-- Clear:
+- clear:
   - Clears the chat history and clears all messages off screen
   - This only affects the client and has no effect on the peer's message history
-- Disconnect:
+- disconnect:
   - Terminates the connection with the peer
-- Peerid: 
+- peerid: 
     - Returns the peer's user ID. Because Courier is P2P with no centralized infrastructure, these IDs are the only way to verify a peer's identity, so it's important to ensure your peer has the ID you expect them to have. 
