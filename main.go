@@ -1,14 +1,17 @@
 package main
 
 import (
+	"bufio"
 	"crypto/rsa"
 	"fmt"
 	"os"
+	"os/exec"
+	"runtime"
 	"strings"
 
+	"github.com/DrewRoss5/courier/cliutils"
 	"github.com/DrewRoss5/courier/cryptoutils"
 
-	"github.com/DrewRoss5/courier/cliutils"
 	"github.com/DrewRoss5/courier/peerutils"
 )
 
@@ -65,52 +68,51 @@ func login() (rsa.PrivateKey, rsa.PublicKey, peerutils.User) {
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Println("This program accepts exactly one argument.")
-		return
-	}
-	command := os.Args[1]
-	switch command {
-	case "init":
-		// request a path and generate and RSA key pair at that path
-		fmt.Print("Key path: ")
-		var keyPath string
-		fmt.Scanf("%s", &keyPath)
-		// create the keys
-		fmt.Println("Generating RSA keys...")
-		err := cryptoutils.GenerateRsaKeys(keyPath)
-		if err != nil {
-			fmt.Println("Failed to generate the keys. Does the key path exist?")
-			return
+	prvKey, pubKey, user := login()
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Printf("%v%v%v > ", user.Color, user.Name, peerutils.ColorReset)
+		input, _ := reader.ReadString('\n')
+		tmp := strings.Split(input, " ")
+		command := strings.Replace(tmp[0], "\n", "", 1)
+		commandArgs := tmp[1:]
+		switch command {
+		case "await":
+			// await an incoming connection and run the chatroom
+			fmt.Println("Listening...")
+			tunnel, err := peerutils.AwaitPeer(pubKey, prvKey, user)
+			if err != nil {
+				fmt.Printf("%verror:%v %v\n", peerutils.Red, peerutils.ColorReset, err.Error())
+				continue
+			}
+			chat := cliutils.NewChatInterface(tunnel)
+			chat.Run()
+		case "connect":
+			if len(commandArgs) != 1 {
+				fmt.Printf("%verror:%v This command takes exactly one argument\n", peerutils.Red, peerutils.ColorReset)
+				continue
+			}
+			fmt.Println("Connecting...")
+			addr := strings.Replace(string(commandArgs[0]), "\n", "", 1)
+			tunnel, err := peerutils.ConnectPeer(addr, pubKey, prvKey, user)
+			if err != nil {
+				fmt.Printf("%verror:%v %v\n", peerutils.Red, peerutils.ColorReset, err.Error())
+				continue
+			}
+			chat := cliutils.NewChatInterface(tunnel)
+			chat.Run()
+		case "clear":
+			// determine if we're running on windows, which uses a different clear command
+			clearCommand := "clear"
+			if runtime.GOOS == "windows" {
+				clearCommand = "cls"
+			}
+			cmd := exec.Command(clearCommand)
+			cmd.Stdout = os.Stdout
+			cmd.Run()
+		default:
+			fmt.Printf("%verror:%v Unrecognized command\n", peerutils.Red, peerutils.ColorReset)
 		}
-		fmt.Println("Keys generated succesfully")
 
-	case "connect":
-		prvKey, pubKey, user := login()
-		var addr string
-		fmt.Print("Peer address: ")
-		fmt.Scanf("%s", &addr)
-		fmt.Println("Connecting...")
-		tunnel, err := peerutils.ConnectPeer(addr, pubKey, prvKey, user)
-		if err != nil {
-			fmt.Printf("Error: %v%v%v\n", peerutils.Red, err.Error(), peerutils.ColorReset)
-			return
-		}
-		chatInterface := cliutils.NewChatInterface(tunnel)
-		chatInterface.Run()
-
-	case "await":
-		prvKey, pubKey, user := login()
-		fmt.Println("Listening...")
-		tunnel, err := peerutils.AwaitPeer(pubKey, prvKey, user)
-		if err != nil {
-			fmt.Printf("Error: %v%v%v\n", peerutils.Red, err.Error(), peerutils.ColorReset)
-			return
-		}
-		chatInterface := cliutils.NewChatInterface(tunnel)
-		chatInterface.Run()
-
-	default:
-		fmt.Printf("Unrecognized command: %v\n", command)
 	}
 }
