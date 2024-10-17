@@ -1,5 +1,8 @@
 # Courier
 CourierCLI, an anonymous command-line messaging app. Messages are end-to-end encrypted using AES256 operating in GCM mode.
+### Important note:
+Because courier is peer-to-peer, and currently requires peers to know a user's IP address to connect, using a VPN or Proxy is **STRONGLY** reccomended when running Courier. 
+
 
 # Roadmap/ToDo
 - Add an in-app command pallete for recieving/creating connections
@@ -32,9 +35,14 @@ CourierCLI, an anonymous command-line messaging app. Messages are end-to-end enc
   - The directory will now contain two files: `pub.pem` and `prv.pem` which will be used as your public and private keys respectively.
 
 # Usage:
-At the moment, courier is launched by using one of two commands (this will change in future versions)
-`courier await`: Awaits incoming messaging requests
-`courier connect`: Connects to a peer, given their address
+Once you've logged in, you'll be greeted with a prompt for a command. As of 10/16/2024, there are 3 available commands
+- connect <address>
+  - Takes a peer's IP address and attempts to connect to them
+- await
+  - Awaits incoming connections.
+  - Note: In future versions, this command will be removed and will automatically run in the background
+- clear:
+  - Clears the screen 
 
 ## Logging in
 When logging into courier you will recieve the following prompts
