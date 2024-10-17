@@ -68,6 +68,28 @@ func login() (rsa.PrivateKey, rsa.PublicKey, peerutils.User) {
 }
 
 func main() {
+	// generate the key file if requested
+	if len(os.Args) > 1 && os.Args[1] == "init" {
+		if len(os.Args) != 3 {
+			fmt.Printf("%verror:%v This command takes exactly one argument\n", peerutils.Red, peerutils.ColorReset)
+			return
+		}
+		path := os.Args[2]
+		err := os.MkdirAll(path, 0777)
+		if err != nil {
+			fmt.Printf("%verror:%v invalid path", peerutils.Red, peerutils.ColorReset)
+			return
+		}
+		fmt.Println("Generating keys...")
+		err = cryptoutils.GenerateRsaKeys(path)
+		if err != nil {
+			fmt.Printf("%verror:%v failed to generate the RSA keys", peerutils.Red, peerutils.ColorReset)
+			return
+		}
+		fmt.Println("Key pair generated")
+		return
+	}
+	// log the user in and begin the program loop
 	prvKey, pubKey, user := login()
 	reader := bufio.NewReader(os.Stdin)
 	for {
@@ -78,7 +100,7 @@ func main() {
 		commandArgs := tmp[1:]
 		switch command {
 		case "await":
-			// await an incoming connection and run the chatroom
+			// await an incoming connection and run the chatroomd
 			fmt.Println("Listening...")
 			tunnel, err := peerutils.AwaitPeer(pubKey, prvKey, user)
 			if err != nil {
@@ -110,6 +132,8 @@ func main() {
 			cmd := exec.Command(clearCommand)
 			cmd.Stdout = os.Stdout
 			cmd.Run()
+		case "exit":
+			return
 		default:
 			fmt.Printf("%verror:%v Unrecognized command\n", peerutils.Red, peerutils.ColorReset)
 		}
