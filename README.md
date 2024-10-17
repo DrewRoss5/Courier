@@ -5,7 +5,6 @@ Because courier is peer-to-peer, and currently requires peers to know a user's I
 
 
 # Roadmap/ToDo
-- Add an in-app command pallete for recieving/creating connections
 - Add more robust error handling
 - Implement support for password protecting private keys
 - Allow for archiving messages
