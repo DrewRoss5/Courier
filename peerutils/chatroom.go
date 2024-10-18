@@ -3,6 +3,7 @@ package peerutils
 import (
 	"errors"
 	"fmt"
+	"io"
 )
 
 const MAX_MSG_COUNT = 50
@@ -61,13 +62,13 @@ func (c *Chatroom) SendMessage(msg *string) error {
 }
 
 // displays all of the Messages currently in the archive
-func (c Chatroom) DisplayMessages() {
+func (c Chatroom) DisplayMessages(file io.Writer) {
 	if len(c.Messages) == 0 {
 		fmt.Printf("%vNo messages to display%v\n", Gray, ColorReset)
 		return
 	}
 	for _, msg := range c.Messages {
-		msg.Display()
+		msg.Display(file)
 	}
 }
 

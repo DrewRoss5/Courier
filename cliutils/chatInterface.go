@@ -27,7 +27,7 @@ func (ci ChatInterface) Display() {
 	cmd.Stdout = os.Stdout
 	cmd.Run()
 	fmt.Printf("Chat with %v:\n", ci.room.Tunnel.Peer.Name)
-	ci.room.DisplayMessages()
+	ci.room.DisplayMessages(os.Stdout)
 }
 
 // awaits a message and displays it (along with all other messages) once recieved

@@ -2,6 +2,7 @@ package peerutils
 
 import (
 	"fmt"
+	"io"
 	"time"
 )
 
@@ -21,8 +22,9 @@ type Message struct {
 	sender   *User
 }
 
-func (m Message) Display() {
-	fmt.Printf("%v%v%v @ %v%v%v: %v", m.sender.Color, m.sender.Name, ColorReset, Yellow, m.timeSent, ColorReset, m.content)
+// displays a message to an output stream, usually  this will be stdout, but this needs to be adjustable for archival purposes
+func (m Message) Display(stream io.Writer) {
+	fmt.Fprintf(stream, "%v%v%v @ %v%v%v: %v", m.sender.Color, m.sender.Name, ColorReset, Yellow, m.timeSent, ColorReset, m.content)
 }
 
 // constructs a new message, making a note of the current timestamp
