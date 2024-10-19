@@ -35,6 +35,18 @@ func (c *Chatroom) pushMessage(msg *string, user *User) {
 	}
 }
 
+// appends a new message sent from the chatroom itself, used for alerts, and the like
+func (c *Chatroom) serverMessage(msg string) {
+	colored := fmt.Sprintf("%v%v%v\n", Green, msg, ColorReset)
+	c.pushMessage(&colored, &User{Name: "Chatroom", Id: "", Color: Green})
+}
+
+// pushes an error message to chatroom
+func (c *Chatroom) errorMessage(msg string) {
+	colored := fmt.Sprintf("%vError:%v %v %v\n", Red, Yellow, msg, ColorReset)
+	c.pushMessage(&colored, &User{Name: "Chatroom", Id: "", Color: Green})
+}
+
 // awaits an incoming message, and handles it according to its code
 func (c *Chatroom) AwaitMessage() error {
 	if !c.Active {
@@ -87,47 +99,57 @@ func (c Chatroom) DisplayMessages(file io.Writer) {
 }
 
 // handles a chat command, and returns the string to be output to the terminal after running
-func (c *Chatroom) HandleCommand(command string, args []string) string {
+func (c *Chatroom) HandleCommand(command string, args []string) {
 	switch command {
 	// clears the message history
 	case ">clear":
 		c.Messages = []Message{}
-		return fmt.Sprintf("%vMessages cleared%v\n", Gray, ColorReset)
+		c.serverMessage("Messages cleared")
 	// terminates the connection
 	case ">disconnect":
 		err := c.Tunnel.Shutdown()
 		if err != nil {
-			return fmt.Sprintf("%vError: failed to close the chatroom%v\n", Red, ColorReset)
+			c.errorMessage("failed to close the chatroom")
+			return
 		}
-		return fmt.Sprintf("%vChat closed.%v\n", Gray, ColorReset)
+		c.serverMessage("Chat closed.")
 	// returns the peer's ID
 	case ">peerid":
-		return fmt.Sprintf("%v%v%v Has the ID\n%v%v%v", c.Tunnel.Peer.Color, c.Tunnel.Peer.Name, ColorReset, Green, c.Tunnel.Peer.Id, ColorReset)
+		c.serverMessage(fmt.Sprintf("%v%v%v Has the ID\n%v%v%v", c.Tunnel.Peer.Color, c.Tunnel.Peer.Name, ColorReset, Green, c.Tunnel.Peer.Id, ColorReset))
 	// archive the chat
 	case ">archive":
 		if len(args) != 1 {
-			return fmt.Sprintf("%vError:%v this command takes exactly one argument\n", Red, ColorReset)
+			c.errorMessage("That command takes exactly one argument")
+			return
 		}
 		fmt.Print("Password: ")
 		password, err := term.ReadPassword(int(syscall.Stdin))
 		if err != nil {
-			return fmt.Sprintf("%vError:%v cannot read the password\n", Red, ColorReset)
+			c.errorMessage("Failed to read the message")
+			return
+		}
+		fmt.Print("\nConfirm Password: ")
+		confirm, _ := term.ReadPassword(int(syscall.Stdin))
+		if !compSlices(confirm, password) {
+			c.errorMessage("Password does not match confirmation. Archive not saved")
+			return
 		}
 		err = c.ArchiveChat(password, args[0])
 		if err != nil {
-			return fmt.Sprintf("%vError:%v %v\n", Red, ColorReset, err.Error())
+			c.errorMessage(err.Error())
+			return
 		}
 		// inform the other user that the chat has been archived
 		err = c.Tunnel.SendMessage([]byte{CHAT_ARCHIVE})
 		if err != nil {
 			c.Active = false
-			return fmt.Sprintf("%vError:%v connection failed", Red, ColorReset)
+			c.errorMessage("connection severed")
+			return
 		}
-		msg := fmt.Sprintf("%v%v%v has archived this chat%v\n", c.Tunnel.Peer.Color, c.Tunnel.Peer.Name, Magenta, ColorReset)
-		c.pushMessage(&msg, &User{Name: "CHATROOM", Color: Magenta})
-		return fmt.Sprintln("Archive saved")
+		c.serverMessage("Chat archived")
 	default:
-		return fmt.Sprintf("%vError:%v unrecognized command\n", Red, ColorReset)
+		c.errorMessage("unrecognized message")
+		return
 	}
 }
 

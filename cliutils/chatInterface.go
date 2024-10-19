@@ -37,7 +37,7 @@ func (ci *ChatInterface) AwaitMessage() {
 		ci.Display()
 		fmt.Print(":")
 		if err != nil {
-			fmt.Printf("%vError: %v%v\n", peerutils.Red, err.Error(), peerutils.ColorReset)
+			fmt.Printf("%vError: %v%v", peerutils.Red, err.Error(), peerutils.ColorReset)
 			ci.room.Active = false
 		}
 	}
@@ -54,6 +54,7 @@ func (ci *ChatInterface) AwaitInput() {
 	}
 	// determine if the input is a command or a message, and handle it appropriately
 	if input[0] == '>' {
+		// run the input as a command
 		input = strings.Replace(input, "\n", "", -1)
 		tmp := strings.Split(input, " ")
 		command := tmp[0]
@@ -61,10 +62,8 @@ func (ci *ChatInterface) AwaitInput() {
 		if len(tmp) > 1 {
 			args = tmp[1:]
 		}
-		// remove the newline from the command
-		output := ci.room.HandleCommand(command, args)
+		ci.room.HandleCommand(command, args)
 		ci.Display()
-		fmt.Println(output)
 	} else {
 		ci.room.SendMessage(&input)
 		ci.Display()
