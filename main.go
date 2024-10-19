@@ -8,9 +8,11 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"syscall"
 
 	"github.com/DrewRoss5/courier/cliutils"
 	"github.com/DrewRoss5/courier/cryptoutils"
+	"golang.org/x/term"
 
 	"github.com/DrewRoss5/courier/peerutils"
 )
@@ -95,8 +97,9 @@ func main() {
 	for {
 		fmt.Printf("%v%v%v > ", user.Color, user.Name, peerutils.ColorReset)
 		input, _ := reader.ReadString('\n')
+		input = strings.Replace(input, "\n", "", -1)
 		tmp := strings.Split(input, " ")
-		command := strings.Replace(tmp[0], "\n", "", 1)
+		command := tmp[0]
 		commandArgs := tmp[1:]
 		switch command {
 		case "await":
@@ -123,6 +126,23 @@ func main() {
 			}
 			chat := cliutils.NewChatInterface(tunnel)
 			chat.Run()
+		case "read-archive":
+			if len(commandArgs) != 1 {
+				fmt.Printf("%verror:%v This command takes exactly one argument\n", peerutils.Red, peerutils.ColorReset)
+				continue
+			}
+			fmt.Print("Password: ")
+			password, err := term.ReadPassword(int(syscall.Stdin))
+			if err != nil {
+				fmt.Printf("%vError:%v failed to read password\n", peerutils.Red, peerutils.ColorReset)
+				continue
+			}
+			archive, err := peerutils.DecryptArchive(commandArgs[0], password)
+			if err != nil {
+				fmt.Printf("%vError:%v %v", peerutils.Red, peerutils.ColorReset, err.Error())
+				continue
+			}
+			fmt.Printf("\n%v\n", archive)
 		case "clear":
 			// determine if we're running on windows, which uses a different clear command
 			clearCommand := "clear"

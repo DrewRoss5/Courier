@@ -54,6 +54,7 @@ func (ci *ChatInterface) AwaitInput() {
 	}
 	// determine if the input is a command or a message, and handle it appropriately
 	if input[0] == '>' {
+		input = strings.Replace(input, "\n", "", -1)
 		tmp := strings.Split(input, " ")
 		command := tmp[0]
 		var args []string = nil
@@ -61,7 +62,6 @@ func (ci *ChatInterface) AwaitInput() {
 			args = tmp[1:]
 		}
 		// remove the newline from the command
-		command = command[:len(command)-1]
 		output := ci.room.HandleCommand(command, args)
 		ci.Display()
 		fmt.Println(output)

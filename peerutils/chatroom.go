@@ -1,12 +1,23 @@
 package peerutils
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"syscall"
+	"time"
+
+	"github.com/DrewRoss5/courier/cryptoutils"
+	"golang.org/x/term"
 )
 
-const MAX_MSG_COUNT = 50
+const (
+	ROUNDS        = 24
+	SALT_SIZE     = 16
+	MAX_MSG_COUNT = 50
+)
 
 type Chatroom struct {
 	Tunnel   Tunnel
@@ -89,7 +100,81 @@ func (c *Chatroom) HandleCommand(command string, args []string) string {
 	// returns the peer's ID
 	case ">peerid":
 		return fmt.Sprintf("%v%v%v Has the ID\n%v%v%v", c.Tunnel.Peer.Color, c.Tunnel.Peer.Name, ColorReset, Green, c.Tunnel.Peer.Id, ColorReset)
+	// archive the chat
+	case ">archive":
+		if len(args) != 1 {
+			return fmt.Sprintf("%vError:%v this command takes exactly one argument\n", Red, ColorReset)
+		}
+		fmt.Print("Password: ")
+		password, err := term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			return fmt.Sprintf("%vError:%v cannot read the password\n", Red, ColorReset)
+		}
+		err = c.ArchiveChat(password, args[0])
+		if err != nil {
+			return fmt.Sprintf("%vError:%v %v\n", Red, ColorReset, err.Error())
+		}
+		return fmt.Sprintln("Archive saved")
 	default:
 		return fmt.Sprintf("%vError:%v unrecognized command\n", Red, ColorReset)
 	}
+}
+
+// generates an AES key from a password, by hashing it with a salt repeatedly
+func hashKey(password []byte, salt []byte) []byte {
+	key := password
+	for i := 0; i < ROUNDS; i++ {
+		key = cryptoutils.HashKey(key, salt)
+	}
+	return key
+}
+
+// archives a chat and saves it to a file in a given path
+func (c Chatroom) ArchiveChat(password []byte, path string) error {
+	// create the path if needed
+	err := os.MkdirAll(path, 0777)
+	if err != nil {
+		return err
+	}
+	// generate a key
+	salt := cryptoutils.GenNonce()
+	key := hashKey(password, salt)
+	// write the chat to a buffer, and encrypt it
+	var buf bytes.Buffer
+	c.DisplayMessages(&buf)
+	ciphertext, err := cryptoutils.AesEncrypt(buf.Bytes(), key)
+	if err != nil {
+		return err
+	}
+	// save the salt and ciphertext to the file
+	contents := append(salt, ciphertext...)
+	fileName := time.Now().Format("/15-04-05.arc")
+	file, err := os.Create(path + fileName)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	file.Write(contents)
+	return nil
+}
+
+// returns a string of a decrypted chat archive
+func DecryptArchive(fileName string, password []byte) (string, error) {
+	// read and parse the file
+	fileContents, err := os.ReadFile(fileName)
+	if err != nil {
+		return "", err
+	}
+	if len(fileContents) < cryptoutils.AES_MIN_CIPHERTEXT_SIZE+SALT_SIZE {
+		return "", errors.New("archive: invalid archive file")
+	}
+	salt := fileContents[:SALT_SIZE]
+	ciphertext := fileContents[SALT_SIZE:]
+	// generate the key and attempt to decrypt the archive
+	key := hashKey(password, salt)
+	archive, err := cryptoutils.AesDecrypt(ciphertext, key)
+	if err != nil {
+		return "", err
+	}
+	return string(archive), nil
 }
