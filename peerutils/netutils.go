@@ -14,11 +14,14 @@ import (
 const BUF_SIZE = 1024
 
 // message codes wil be defined here
-const RES_OK byte = 0x0
-const RES_ERR byte = 0x1
-const MESSAGE_INIT byte = 0x1
-const MESSAGE_TXT byte = 0x2
-const MESSAGE_DISCONNECT byte = 0x3
+const (
+	RES_OK             byte = 0x0
+	RES_ERR            byte = 0x1
+	MESSAGE_INIT       byte = 0x1
+	MESSAGE_TXT        byte = 0x2
+	MESSAGE_DISCONNECT byte = 0x3
+	CHAT_ARCHIVE       byte = 0x4
+)
 
 // a helper function to compare two byte slices
 func compSlices(a []byte, b []byte) bool {

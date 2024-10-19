@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	ROUNDS        = 24
+	ROUNDS        = 64
 	SALT_SIZE     = 16
 	MAX_MSG_COUNT = 50
 )
@@ -53,6 +53,9 @@ func (c *Chatroom) AwaitMessage() error {
 		c.pushMessage(&messageStr, &c.Tunnel.Peer)
 	case MESSAGE_DISCONNECT:
 		c.Active = false
+	case CHAT_ARCHIVE:
+		msg := fmt.Sprintf("%v%v%v has archived this chat%v\n", c.Tunnel.Peer.Color, c.Tunnel.Peer.Name, Magenta, ColorReset)
+		c.pushMessage(&msg, &User{Name: "CHATROOM", Color: Magenta})
 	default:
 		return errors.New("chatroom: invalid message recieved")
 	}
@@ -114,6 +117,14 @@ func (c *Chatroom) HandleCommand(command string, args []string) string {
 		if err != nil {
 			return fmt.Sprintf("%vError:%v %v\n", Red, ColorReset, err.Error())
 		}
+		// inform the other user that the chat has been archived
+		err = c.Tunnel.SendMessage([]byte{CHAT_ARCHIVE})
+		if err != nil {
+			c.Active = false
+			return fmt.Sprintf("%vError:%v connection failed", Red, ColorReset)
+		}
+		msg := fmt.Sprintf("%v%v%v has archived this chat%v\n", c.Tunnel.Peer.Color, c.Tunnel.Peer.Name, Magenta, ColorReset)
+		c.pushMessage(&msg, &User{Name: "CHATROOM", Color: Magenta})
 		return fmt.Sprintln("Archive saved")
 	default:
 		return fmt.Sprintf("%vError:%v unrecognized command\n", Red, ColorReset)
