@@ -7,8 +7,6 @@ Because courier is peer-to-peer, and currently requires peers to know a user's I
 # Roadmap/ToDo
 - Add more robust error handling
 - Implement support for password protecting private keys
-- Allow for archiving messages
-- Add additional chat commands
 - Allow for multiple chats simulataneously (each chat having its own "tab")
   - Once this is implemented, implement peer discovery, allowing for more complete p2p functionality
 - Add support for public "nodes" for peers to discover eachother on
@@ -41,6 +39,8 @@ Once you've logged in, you'll be greeted with a prompt for a command. As of 10/1
   - Note: In future versions, this command will be removed and will automatically run in the background
 - clear:
   - Clears the screen
+- archive <filepath>:
+  - Prompts the user for the password for the archive file at `filepath` and displays the decrypted chat archive if the password is correct.
 - exit:
   - Exits courier
 
@@ -73,4 +73,6 @@ More commands will be added in future builds
 - disconnect:
   - Terminates the connection with the peer
 - peerid: 
-    - Returns the peer's user ID. Because Courier is P2P with no centralized infrastructure, these IDs are the only way to verify a peer's identity, so it's important to ensure your peer has the ID you expect them to have. 
+    - Returns the peer's user ID. Because Courier is P2P with no centralized infrastructure, these IDs are the only way to verify a peer's identity, so it's important to ensure your peer has the ID you expect them to have.
+- archive <path>:
+  - Creates a password-protected archive of the chat, and stores it to the specified directory (creating new directories as needed). The archive's file name is based on the current time, and it is name as `<HOUR>-<MINUTE>-<SECOND>.arc`
