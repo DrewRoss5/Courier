@@ -39,7 +39,7 @@ Once you've logged in, you'll be greeted with a prompt for a command. As of 10/1
   - Note: In future versions, this command will be removed and will automatically run in the background
 - clear:
   - Clears the screen
-- archive <filepath>:
+- read-archive <filepath>:
   - Prompts the user for the password for the archive file at `filepath` and displays the decrypted chat archive if the password is correct.
 - exit:
   - Exits courier
