@@ -48,7 +48,7 @@ func login() (rsa.PrivateKey, rsa.PublicKey, peerutils.User) {
 	case "blue":
 		color = peerutils.Blue
 	case "green":
-		color = peerutils.Yellow
+		color = peerutils.Green
 	case "magenta":
 		color = peerutils.Magenta
 	case "cyan":
