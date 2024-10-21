@@ -67,7 +67,7 @@ func (c *Chatroom) AwaitMessage() error {
 		c.Active = false
 	case CHAT_ARCHIVE:
 		msg := fmt.Sprintf("%v%v%v has archived this chat%v\n", c.Tunnel.Peer.Color, c.Tunnel.Peer.Name, Magenta, ColorReset)
-		c.pushMessage(&msg, &User{Name: "CHATROOM", Color: Magenta})
+		c.serverMessage(fmt.Sprintf("%v%v%v archived this chat.", c.Tunnel.Peer.Color, c.Tunnel.Peer.Name, Green))
 	default:
 		return errors.New("chatroom: invalid message recieved")
 	}
