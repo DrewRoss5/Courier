@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	ROUNDS        = 64
+	ROUNDS        = 256
 	SALT_SIZE     = 16
 	MAX_MSG_COUNT = 50
 )
@@ -147,6 +147,14 @@ func (c *Chatroom) HandleCommand(command string, args []string) {
 			return
 		}
 		c.serverMessage("Chat archived")
+	// severs the connection and exits the application
+	case ">exit":
+		err := c.Tunnel.Shutdown()
+		if err != nil {
+			c.errorMessage("failed to close the chatroom")
+			return
+		}
+		os.Exit(0)
 	default:
 		c.errorMessage("unrecognized message")
 		return
