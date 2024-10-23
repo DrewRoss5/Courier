@@ -95,7 +95,7 @@ func main() {
 	prvKey, pubKey, user := login()
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Printf("%v%v%v > ", user.Color, user.Name, peerutils.ColorReset)
+		fmt.Printf("%v%v%v%v > ", peerutils.Bold, user.Color, user.Name, peerutils.ColorReset)
 		input, _ := reader.ReadString('\n')
 		input = strings.Replace(input, "\n", "", -1)
 		tmp := strings.Split(input, " ")

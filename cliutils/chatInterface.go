@@ -37,7 +37,7 @@ func (ci *ChatInterface) AwaitMessage() {
 		ci.Display()
 		fmt.Print(":")
 		if err != nil {
-			fmt.Printf("%vError: %v%v", peerutils.Red, err.Error(), peerutils.ColorReset)
+			fmt.Printf("%vChat closed.\n%v", peerutils.Gray, peerutils.ColorReset)
 			ci.room.Active = false
 		}
 	}
@@ -45,7 +45,7 @@ func (ci *ChatInterface) AwaitMessage() {
 
 // awaits user input, and handles it if it's a command, or sends it if it is a message
 func (ci *ChatInterface) AwaitInput() {
-	fmt.Print(":")
+	fmt.Printf("%v%v%v%v: ", ci.room.Tunnel.User.Color, peerutils.Bold, ci.room.Tunnel.User.Name, peerutils.ColorReset)
 	in := bufio.NewReader(os.Stdin)
 	input, err := in.ReadString('\n')
 	if err != nil {

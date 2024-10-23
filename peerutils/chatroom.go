@@ -43,7 +43,7 @@ func (c *Chatroom) serverMessage(msg string) {
 
 // pushes an error message to chatroom
 func (c *Chatroom) errorMessage(msg string) {
-	colored := fmt.Sprintf("%vError:%v %v %v\n", Red, Yellow, msg, ColorReset)
+	colored := fmt.Sprintf("%v%vError:%v %v %v\n", Bold, Red, Yellow, msg, ColorReset)
 	c.pushMessage(&colored, &User{Name: "Chatroom", Id: "", Color: Green})
 }
 
@@ -66,7 +66,6 @@ func (c *Chatroom) AwaitMessage() error {
 	case MESSAGE_DISCONNECT:
 		c.Active = false
 	case CHAT_ARCHIVE:
-		msg := fmt.Sprintf("%v%v%v has archived this chat%v\n", c.Tunnel.Peer.Color, c.Tunnel.Peer.Name, Magenta, ColorReset)
 		c.serverMessage(fmt.Sprintf("%v%v%v archived this chat.", c.Tunnel.Peer.Color, c.Tunnel.Peer.Name, Green))
 	default:
 		return errors.New("chatroom: invalid message recieved")
@@ -90,7 +89,7 @@ func (c *Chatroom) SendMessage(msg *string) error {
 // displays all of the Messages currently in the archive
 func (c Chatroom) DisplayMessages(file io.Writer) {
 	if len(c.Messages) == 0 {
-		fmt.Printf("%vNo messages to display%v\n", Gray, ColorReset)
+		fmt.Printf("%v%vNo messages to display%v\n", Italic, Gray, ColorReset)
 		return
 	}
 	for _, msg := range c.Messages {
