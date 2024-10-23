@@ -1,4 +1,4 @@
-# Courier
+   # Courier
 CourierCLI, an anonymous command-line messaging app. Messages are end-to-end encrypted using AES256 operating in GCM mode.
 ### Important note:
 Because courier is peer-to-peer, and currently requires peers to know a user's IP address to connect, using a VPN or Proxy is **STRONGLY** reccomended when running Courier. 
@@ -74,5 +74,6 @@ More commands will be added in future builds
   - Terminates the connection with the peer
 - peerid: 
     - Returns the peer's user ID. Because Courier is P2P with no centralized infrastructure, these IDs are the only way to verify a peer's identity, so it's important to ensure your peer has the ID you expect them to have.
-- archive <path>:
+- archive \<path> \[rounds]:
   - Creates a password-protected archive of the chat, and stores it to the specified directory (creating new directories as needed). The archive's file name is based on the current time, and it is name as `<HOUR>-<MINUTE>-<SECOND>.arc`
+  - Specifiying the number of rounds is optional. Rounds determines the number of rounds of hashing your password will undergo to create an encryption key.
