@@ -35,7 +35,7 @@ func (ci *ChatInterface) AwaitMessage() {
 	for ci.room.Active {
 		err := ci.room.AwaitMessage()
 		ci.Display()
-		fmt.Print(":")
+		fmt.Printf("%v%v%v%v: ", ci.room.Tunnel.User.Color, peerutils.Bold, ci.room.Tunnel.User.Name, peerutils.ColorReset)
 		if err != nil {
 			fmt.Printf("%vChat closed.\n%v", peerutils.Gray, peerutils.ColorReset)
 			ci.room.Active = false

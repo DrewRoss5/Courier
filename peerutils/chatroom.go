@@ -2,10 +2,12 @@ package peerutils
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -14,9 +16,9 @@ import (
 )
 
 const (
-	ROUNDS        = 256
-	SALT_SIZE     = 16
-	MAX_MSG_COUNT = 50
+	DEFAULT_ROUNDS = 256
+	SALT_SIZE      = 16
+	MAX_MSG_COUNT  = 50
 )
 
 type Chatroom struct {
@@ -117,9 +119,25 @@ func (c *Chatroom) HandleCommand(command string, args []string) {
 		c.serverMessage(fmt.Sprintf("%v%v%v Has the ID\n%v%v%v", c.Tunnel.Peer.Color, c.Tunnel.Peer.Name, ColorReset, Green, c.Tunnel.Peer.Id, ColorReset))
 	// archive the chat
 	case ">archive":
-		if len(args) != 1 {
-			c.errorMessage("That command takes exactly one argument")
+		if len(args) < 1 || len(args) > 2 {
+			c.errorMessage("That command takes between one and two arguments")
 			return
+		}
+		// determine the rounds of hashing the user would like to use, DEFAULT=256
+		var rounds int
+		var err error = nil
+		if len(args) == 1 {
+			rounds = DEFAULT_ROUNDS
+		} else {
+			rounds, err = strconv.Atoi(args[1])
+			if err != nil {
+				c.errorMessage("Rounds must be a positive integer")
+				return
+			}
+			if rounds < 0 {
+				c.errorMessage("Rounds must be a positive integer")
+				return
+			}
 		}
 		fmt.Print("Password: ")
 		password, err := term.ReadPassword(int(syscall.Stdin))
@@ -133,7 +151,7 @@ func (c *Chatroom) HandleCommand(command string, args []string) {
 			c.errorMessage("Password does not match confirmation. Archive not saved")
 			return
 		}
-		err = c.ArchiveChat(password, args[0])
+		err = c.ArchiveChat(password, args[0], rounds)
 		if err != nil {
 			c.errorMessage(err.Error())
 			return
@@ -161,16 +179,16 @@ func (c *Chatroom) HandleCommand(command string, args []string) {
 }
 
 // generates an AES key from a password, by hashing it with a salt repeatedly
-func hashKey(password []byte, salt []byte) []byte {
+func hashKey(password []byte, salt []byte, rounds int) []byte {
 	key := password
-	for i := 0; i < ROUNDS; i++ {
+	for i := 0; i < rounds; i++ {
 		key = cryptoutils.HashKey(key, salt)
 	}
 	return key
 }
 
 // archives a chat and saves it to a file in a given path
-func (c Chatroom) ArchiveChat(password []byte, path string) error {
+func (c Chatroom) ArchiveChat(password []byte, path string, rounds int) error {
 	// create the path if needed
 	err := os.MkdirAll(path, 0777)
 	if err != nil {
@@ -178,7 +196,7 @@ func (c Chatroom) ArchiveChat(password []byte, path string) error {
 	}
 	// generate a key
 	salt := cryptoutils.GenNonce()
-	key := hashKey(password, salt)
+	key := hashKey(password, salt, rounds)
 	// write the chat to a buffer, and encrypt it
 	var buf bytes.Buffer
 	c.DisplayMessages(&buf)
@@ -186,8 +204,12 @@ func (c Chatroom) ArchiveChat(password []byte, path string) error {
 	if err != nil {
 		return err
 	}
+	// parse the rounds into a buffer
+	roundBuf := make([]byte, 4)
+	binary.LittleEndian.PutUint32(roundBuf, uint32(rounds))
 	// save the salt and ciphertext to the file
-	contents := append(salt, ciphertext...)
+	contents := append(roundBuf, salt...)
+	contents = append(contents, ciphertext...)
 	fileName := time.Now().Format("/15-04-05.arc")
 	file, err := os.Create(path + fileName)
 	if err != nil {
@@ -208,10 +230,13 @@ func DecryptArchive(fileName string, password []byte) (string, error) {
 	if len(fileContents) < cryptoutils.AES_MIN_CIPHERTEXT_SIZE+SALT_SIZE {
 		return "", errors.New("archive: invalid archive file")
 	}
-	salt := fileContents[:SALT_SIZE]
-	ciphertext := fileContents[SALT_SIZE:]
+	roundsBuf := fileContents[:4]
+	salt := fileContents[4 : SALT_SIZE+4]
+	ciphertext := fileContents[SALT_SIZE+4:]
+	// read the rounds
+	rounds := binary.LittleEndian.Uint32(roundsBuf)
 	// generate the key and attempt to decrypt the archive
-	key := hashKey(password, salt)
+	key := hashKey(password, salt, int(rounds))
 	archive, err := cryptoutils.AesDecrypt(ciphertext, key)
 	if err != nil {
 		return "", err
