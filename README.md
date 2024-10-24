@@ -1,11 +1,10 @@
-   # Courier
+# Courier
 CourierCLI, an anonymous command-line messaging app. Messages are end-to-end encrypted using AES256 operating in GCM mode.
 ### Important note:
 Because courier is peer-to-peer, and currently requires peers to know a user's IP address to connect, using a VPN or Proxy is **STRONGLY** reccomended when running Courier. 
 
 
 # Roadmap/ToDo
-- Add user validation to tunnel initialization
 - Implement support for password protecting private keys
 - Allow for multiple chats simulataneously (each chat having its own "tab")
   - Once this is implemented, implement peer discovery, allowing for more complete p2p functionality
@@ -47,7 +46,7 @@ Once you've logged in, you'll be greeted with a prompt for a command. As of 10/1
 ## Logging in
 When logging into courier you will recieve the following prompts
 - Username:
-  - This will be your display name. Can be anything you want
+  - This will be your display name. Can be anything you want as long as it is >= 64 characters in length.
 - Color: 
   - This will be the color your name is displayed in 
   - Valid options:
