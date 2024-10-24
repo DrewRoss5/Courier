@@ -5,7 +5,7 @@ Because courier is peer-to-peer, and currently requires peers to know a user's I
 
 
 # Roadmap/ToDo
-- Add more robust error handling
+- Add user validation to tunnel initialization
 - Implement support for password protecting private keys
 - Allow for multiple chats simulataneously (each chat having its own "tab")
   - Once this is implemented, implement peer discovery, allowing for more complete p2p functionality
