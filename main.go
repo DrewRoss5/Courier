@@ -34,6 +34,10 @@ func login() (rsa.PrivateKey, rsa.PublicKey, peerutils.User) {
 	fmt.Print("Username: ")
 	var username string
 	fmt.Scanf("%s", &username)
+	if len(username) > 64 {
+		fmt.Printf("%vError:%v Invalid username\n", peerutils.Red, peerutils.ColorReset)
+		os.Exit(1)
+	}
 	// request the user's color
 	fmt.Print("Color (leave blank for gray): ")
 	var color string
@@ -63,6 +67,7 @@ func login() (rsa.PrivateKey, rsa.PublicKey, peerutils.User) {
 	id, err := peerutils.GenId(&prvKey)
 	if err != nil {
 		fmt.Printf("%vError:%v Failed to generate a user id. Exiting...\n", peerutils.Red, peerutils.ColorReset)
+		os.Exit(1)
 	}
 	user := peerutils.User{Name: username, Color: color, Id: id}
 	return prvKey, pubKey, user

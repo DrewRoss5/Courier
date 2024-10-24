@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net"
+	"slices"
 	"strings"
 	"time"
 
@@ -145,14 +146,24 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 	var peer User
 	err = json.Unmarshal(stripZeroes(peerInfo), &peer)
 	if err != nil {
+		conn.Write([]byte{RES_ERR})
 		return nil, err
 	}
 	// validate the peer's ID
 	if !ValidateId(peer.Id, &peerPub) {
+		conn.Write([]byte{RES_ERR})
 		return nil, err
 	}
-	response = []byte{RES_OK}
-	_, err = conn.Write(response)
+	// validate the peer's username and color
+	if !slices.Contains([]string{Red, Green, Blue, Yellow, Magenta, Cyan, Gray, White}, peer.Color) {
+		conn.Write([]byte{RES_ERR})
+		return nil, err
+	}
+	if len(peer.Name) > 64 {
+		conn.Write([]byte{RES_ERR})
+		return nil, err
+	}
+	_, err = conn.Write([]byte{RES_OK})
 	if err != nil {
 		return nil, err
 	}
