@@ -27,6 +27,7 @@ Because courier is peer-to-peer, and currently requires peers to know a user's I
   - Run `courier init <keyPath>`
   - The keyPath is the relative path to the directory you'd like to store your RSA keys for courier. This will generate new directories as needed.
   - The directory will now contain two files: `pub.pem` and `prv.pem` which will be used as your public and private keys respectively.
+  - As of version v0.1.2, you will be prompted to set a password to encrypt your private key with, it is recommended to set a password, as without one, your RSA private key will be stored in plaintext.
 
 # Usage:
 Once you've logged in, you'll be greeted with a prompt for a command. As of 10/16/2024, there are 3 available commands
@@ -62,7 +63,6 @@ When logging into courier you will recieve the following prompts
 ## Commands
 Because courier is a CLI application, interaction other than sending messages is done via commands.
 To use a command, type ">" in the message entry immediately followed by the command (no space).
-More commands will be added in future builds
 
 ### Current Commands
 - clear:
