@@ -12,6 +12,19 @@ const (
 	AES_MIN_CIPHERTEXT_SIZE = aes.BlockSize + 12
 )
 
+// a helper function to strip zeroes from the beginning of a byte slice
+// this isn't necessarily related to AES inherently, however there isn't really a better place to put this function
+func StripZeroes(slice []byte) []byte {
+	pos := 0
+	for {
+		pos++
+		if slice[pos] != 0 || pos == len(slice) {
+			break
+		}
+	}
+	return slice[pos:]
+}
+
 // returns a radnomly generated 256-bit aes key
 func GenAesKey() []byte {
 	key := make([]byte, AES_KEY_SIZE)

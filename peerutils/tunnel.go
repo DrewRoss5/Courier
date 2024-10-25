@@ -54,7 +54,7 @@ func (t Tunnel) AwaitMessage() ([]byte, error) {
 		t.Incoming.Write([]byte{RES_ERR})
 		return nil, err
 	}
-	message = stripZeroes(message)
+	message = cryptoutils.StripZeroes(message)
 	if !cryptoutils.RsaVerify(t.PeerPubKey, message, signature) {
 		t.Incoming.Write([]byte{RES_ERR})
 		return nil, errors.New("failed to verify RSA signature")

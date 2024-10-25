@@ -38,18 +38,6 @@ func compSlices(a []byte, b []byte) bool {
 	return true
 }
 
-// a helper function to strip zeroes from the beginning of a byte slice
-func stripZeroes(slice []byte) []byte {
-	pos := 0
-	for {
-		pos++
-		if slice[pos] != 0 || pos == len(slice) {
-			break
-		}
-	}
-	return slice[pos:]
-}
-
 // recieves data of unknown size from Conn object
 func RecvAll(conn net.Conn) (int, []byte, error) {
 	message := make([]byte, 0, BUF_SIZE)
@@ -144,7 +132,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 		return nil, err
 	}
 	var peer User
-	err = json.Unmarshal(stripZeroes(peerInfo), &peer)
+	err = json.Unmarshal(cryptoutils.StripZeroes(peerInfo), &peer)
 	if err != nil {
 		conn.Write([]byte{RES_ERR})
 		return nil, err
@@ -257,7 +245,7 @@ func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever User) (*Tun
 		return nil, err
 	}
 	var peer User
-	err = json.Unmarshal(stripZeroes(peerInfo), &peer)
+	err = json.Unmarshal(cryptoutils.StripZeroes(peerInfo), &peer)
 	if err != nil {
 		conn.Write([]byte{RES_ERR})
 		return nil, err

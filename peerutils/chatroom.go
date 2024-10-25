@@ -178,15 +178,6 @@ func (c *Chatroom) HandleCommand(command string, args []string) {
 	}
 }
 
-// generates an AES key from a password, by hashing it with a salt repeatedly
-func hashKey(password []byte, salt []byte, rounds int) []byte {
-	key := password
-	for i := 0; i < rounds; i++ {
-		key = cryptoutils.HashKey(key, salt)
-	}
-	return key
-}
-
 // archives a chat and saves it to a file in a given path
 func (c Chatroom) ArchiveChat(password []byte, path string, rounds int) error {
 	// create the path if needed
@@ -196,7 +187,7 @@ func (c Chatroom) ArchiveChat(password []byte, path string, rounds int) error {
 	}
 	// generate a key
 	salt := cryptoutils.GenNonce()
-	key := hashKey(password, salt, rounds)
+	key := cryptoutils.HashKey(password, salt, rounds)
 	// write the chat to a buffer, and encrypt it
 	var buf bytes.Buffer
 	c.DisplayMessages(&buf)
@@ -236,7 +227,7 @@ func DecryptArchive(fileName string, password []byte) (string, error) {
 	// read the rounds
 	rounds := binary.LittleEndian.Uint32(roundsBuf)
 	// generate the key and attempt to decrypt the archive
-	key := hashKey(password, salt, int(rounds))
+	key := cryptoutils.HashKey(password, salt, int(rounds))
 	archive, err := cryptoutils.AesDecrypt(ciphertext, key)
 	if err != nil {
 		return "", err

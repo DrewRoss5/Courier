@@ -17,17 +17,20 @@ import (
 
 // there aren't real accounts, but this creates a user for "login"
 func login() (rsa.PrivateKey, rsa.PublicKey, peerutils.User) {
+
 	// read the user's key
-	fmt.Print("Key path: ")
 	var keyPath string
+	fmt.Print("Key path: ")
 	fmt.Scanf("%s", &keyPath)
-	fmt.Println("Importing RSA keys...")
-	prvKey, pubKey, err := cryptoutils.ImportRsa(keyPath)
+	fmt.Print("Private key password: ")
+	keyPassword, _ := term.ReadPassword(syscall.Stdin)
+	fmt.Println("\nImporting RSA keys...")
+	prvKey, pubKey, err := cryptoutils.ImportRsa(keyPath, keyPassword)
 	if err != nil {
 		fmt.Println("Failed to import RSA keys. Exiting...")
 		os.Exit(1)
 	}
-	fmt.Println("Key read.")
+	fmt.Println("Keys read.")
 	// request the user's username
 	fmt.Print("Username: ")
 	var username string

@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"syscall"
 
 	"github.com/DrewRoss5/courier/cliutils"
 	"github.com/DrewRoss5/courier/cryptoutils"
 	"github.com/DrewRoss5/courier/peerutils"
+	"golang.org/x/term"
 )
 
 func main() {
@@ -22,8 +24,14 @@ func main() {
 			fmt.Printf("%verror:%v invalid path", peerutils.Red, peerutils.ColorReset)
 			return
 		}
-		fmt.Println("Generating keys...")
-		err = cryptoutils.GenerateRsaKeys(path)
+		fmt.Print("Private key password (leave blank to disable encryption):")
+		password, _ := term.ReadPassword(int(syscall.Stdin))
+		if len(password) == 0 {
+			fmt.Printf("\n%vWarning:%v your private key will be stored in plaintext.\n", peerutils.Yellow, peerutils.ColorReset)
+			password = nil
+		}
+		fmt.Println("\nGenerating keys...")
+		err = cryptoutils.GenerateRsaKeys(path, password)
 		if err != nil {
 			fmt.Printf("%verror:%v failed to generate the RSA keys", peerutils.Red, peerutils.ColorReset)
 			return

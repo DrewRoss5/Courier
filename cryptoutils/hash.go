@@ -2,10 +2,14 @@ package cryptoutils
 
 import "crypto/sha256"
 
-// creates a sha256 to be used as a key, given plaintext and salt
-func HashKey(plaintext []byte, salt []byte) []byte {
-	hasher := sha256.New()
-	hasher.Write(plaintext)
-	hasher.Write(salt)
-	return hasher.Sum(nil)
+// generates an AES key from a password, by hashing it with a salt repeatedly
+func HashKey(password []byte, salt []byte, rounds int) []byte {
+	key := password
+	for i := 0; i < rounds; i++ {
+		hasher := sha256.New()
+		hasher.Write(key)
+		hasher.Write(salt)
+		key = hasher.Sum(nil)
+	}
+	return key
 }
