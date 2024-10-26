@@ -156,7 +156,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 		return nil, err
 	}
 	// await a connection on this incoming port
-	listener, err := net.Listen("tcp", addr+":54001")
+	listener, err := net.Listen("tcp", ":54001")
 	if err != nil {
 		conn.Write([]byte{RES_ERR})
 		return nil, err
@@ -275,7 +275,7 @@ func AwaitPeer(pubKey rsa.PublicKey, prvKey rsa.PrivateKey, reciever User) (*Tun
 		return nil, err
 	}
 	// await the peer's connection to the incoming port
-	listener, err = net.Listen("tcp", peerAddr+":54002")
+	listener, err = net.Listen("tcp", ":54002")
 	if err != nil {
 		return nil, err
 	}
