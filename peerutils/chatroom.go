@@ -70,6 +70,12 @@ func (c *Chatroom) AwaitMessage() error {
 		c.pushMessage(&messageStr, &c.Tunnel.Peer)
 	case MESSAGE_DISCONNECT:
 		c.Active = false
+	case MESSAGE_DELETE:
+		id := binary.LittleEndian.Uint32(msg)
+		message, ok := c.Messages[id]
+		if ok && message.sender.Id == c.Tunnel.Peer.Id {
+			delete(c.Messages, id)
+		}
 	case CHAT_ARCHIVE:
 		c.serverMessage(fmt.Sprintf("%v%v%v archived this chat.", c.Tunnel.Peer.Color, c.Tunnel.Peer.Name, Green))
 	default:
@@ -125,6 +131,27 @@ func (c *Chatroom) HandleCommand(command string, args []string) {
 	// returns the peer's ID
 	case ">peerid":
 		c.serverMessage(fmt.Sprintf("%v%v%v Has the ID\n%v%v%v", c.Tunnel.Peer.Color, c.Tunnel.Peer.Name, ColorReset, Green, c.Tunnel.Peer.Id, ColorReset))
+	// deletes a message from the chat history on both user's ends
+	case ">delete":
+		var id uint32
+		if len(args) == 0 {
+			id = c.MaxId - 1
+		} else {
+			tmp, err := strconv.Atoi(args[1])
+			if err != nil {
+				c.errorMessage("Invalid message id")
+			}
+			id = uint32(tmp)
+		}
+		message, ok := c.Messages[id]
+		if !ok || message.sender.Id != c.Tunnel.User.Id {
+			c.errorMessage("Invalid message id")
+			return
+		}
+		delete(c.Messages, id)
+		buf := make([]byte, 4)
+		binary.LittleEndian.AppendUint32(buf, id)
+		c.Tunnel.SendMessage(append([]byte{MESSAGE_DELETE}, buf...))
 	// archive the chat
 	case ">archive":
 		if len(args) < 1 || len(args) > 2 {

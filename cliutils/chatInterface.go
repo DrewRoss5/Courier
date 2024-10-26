@@ -82,7 +82,7 @@ func (ci *ChatInterface) Run() {
 
 // initializes a ChatInterface, given the tunnel
 func NewChatInterface(tunnel *peerutils.Tunnel) *ChatInterface {
-	chatroom := peerutils.Chatroom{Tunnel: *tunnel, Active: true}
+	chatroom := peerutils.Chatroom{Tunnel: *tunnel, Active: true, MaxId: 0, Messages: make(map[uint32]peerutils.Message)}
 	ci := ChatInterface{chatroom}
 	return &ci
 }
