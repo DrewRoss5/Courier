@@ -5,11 +5,10 @@ Because courier is peer-to-peer, and currently requires peers to know a user's I
 
 
 # Roadmap/ToDo
-- Allow for multiple chats simulataneously (each chat having its own "tab")
-  - Once this is implemented, implement peer discovery, allowing for more complete p2p functionality
-- Add support for public "nodes" for peers to discover eachother on
-- Add support for Windows
-
+- Add self-destructing messages
+- Add group chats
+- Add support for multiple chats at once
+  
 # Installation and Setup
 ## Linux Installation
 - At the moment, there is no offical install script, so the app must be compiled manually
