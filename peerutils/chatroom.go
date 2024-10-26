@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strconv"
 	"syscall"
 	"time"
@@ -147,7 +148,7 @@ func (c *Chatroom) HandleCommand(command string, args []string) {
 		}
 		fmt.Print("\nConfirm Password: ")
 		confirm, _ := term.ReadPassword(int(syscall.Stdin))
-		if !compSlices(confirm, password) {
+		if slices.Compare(confirm, password) != 0 {
 			c.errorMessage("Password does not match confirmation. Archive not saved")
 			return
 		}

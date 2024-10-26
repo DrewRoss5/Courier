@@ -24,20 +24,6 @@ const (
 	CHAT_ARCHIVE       byte = 0x4
 )
 
-// a helper function to compare two byte slices
-func compSlices(a []byte, b []byte) bool {
-	sliceLen := len(a)
-	if sliceLen != len(b) {
-		return false
-	}
-	for i := 0; i < sliceLen; i++ {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
-}
-
 // recieves data of unknown size from Conn object
 func RecvAll(conn net.Conn) (int, []byte, error) {
 	message := make([]byte, 0, BUF_SIZE)
@@ -107,7 +93,7 @@ func ConnectPeer(addr string, pubKey rsa.PublicKey, prvKey rsa.PrivateKey, initi
 		conn.Write([]byte{RES_ERR})
 		return nil, err
 	}
-	if !compSlices(checksum, responsePlaintext) {
+	if slices.Compare(checksum, responsePlaintext) != 0 {
 		conn.Write([]byte{RES_ERR})
 		return nil, errors.New("failed to verify the session key with peer")
 	}

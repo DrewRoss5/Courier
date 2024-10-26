@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"slices"
 	"syscall"
 
 	"github.com/DrewRoss5/courier/cliutils"
@@ -29,6 +30,13 @@ func main() {
 		if len(password) == 0 {
 			fmt.Printf("\n%vWarning:%v your private key will be stored in plaintext.\n", peerutils.Yellow, peerutils.ColorReset)
 			password = nil
+		} else {
+			fmt.Print("Confirm: ")
+			confirm, _ := term.ReadPassword(int(syscall.Stdin))
+			if slices.Compare(password, confirm) != 0 {
+				fmt.Printf("\n%verror:%v password does not match confirmation. Exiting...\n", peerutils.Red, peerutils.ColorReset)
+				return
+			}
 		}
 		fmt.Println("\nGenerating keys...")
 		err = cryptoutils.GenerateRsaKeys(path, password)
