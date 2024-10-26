@@ -24,17 +24,19 @@ const (
 
 type Chatroom struct {
 	Tunnel   Tunnel
-	Messages []Message
+	Messages map[uint32]Message
+	MaxId    uint32
 	Active   bool
 }
 
 // appends a new message to the chat history
 func (c *Chatroom) pushMessage(msg *string, user *User) {
 	newMessage := NewMessage(*msg, user)
-	c.Messages = append(c.Messages, *newMessage)
-	// delete old Messages if the archive is too large TODO: Make this an optional feature and not mandated
-	if len(c.Messages) > MAX_MSG_COUNT {
-		c.Messages = c.Messages[1:]
+	c.Messages[c.MaxId] = *newMessage
+	c.MaxId++
+	if c.MaxId == 0xffffffff {
+		c.Messages = make(map[uint32]Message)
+		c.serverMessage("Message limit reached. Chat history cleared")
 	}
 }
 
@@ -95,8 +97,13 @@ func (c Chatroom) DisplayMessages(file io.Writer) {
 		fmt.Printf("%v%vNo messages to display%v\n", Italic, Gray, ColorReset)
 		return
 	}
-	for _, msg := range c.Messages {
-		msg.Display(file)
+	var i uint32
+	for i = 0; i < c.MaxId; i++ {
+		// under normal circumstances, all id's should be sequential, however, this is to account for messages potentially being deleted
+		message, ok := c.Messages[i]
+		if ok {
+			message.Display(file)
+		}
 	}
 }
 
@@ -105,7 +112,7 @@ func (c *Chatroom) HandleCommand(command string, args []string) {
 	switch command {
 	// clears the message history
 	case ">clear":
-		c.Messages = []Message{}
+		c.Messages = make(map[uint32]Message)
 		c.serverMessage("Messages cleared")
 	// terminates the connection
 	case ">disconnect":

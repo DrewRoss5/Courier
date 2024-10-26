@@ -20,8 +20,9 @@ const (
 	RES_ERR            byte = 0x1
 	MESSAGE_INIT       byte = 0x1
 	MESSAGE_TXT        byte = 0x2
-	MESSAGE_DISCONNECT byte = 0x3
-	CHAT_ARCHIVE       byte = 0x4
+	MESSAGE_TIMED      byte = 0x3
+	MESSAGE_DISCONNECT byte = 0x4
+	CHAT_ARCHIVE       byte = 0x5
 )
 
 // recieves data of unknown size from Conn object
