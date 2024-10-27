@@ -77,3 +77,5 @@ To use a command, type ">" in the message entry immediately followed by the comm
 - delete \[id]
     - Deletes the message with the selected id
     - If no id is specified, it will default to the user's last-sent message
+- timed \<delay> \<message>
+    - Sends the message and automatically deletes it after `delay` seconds. This can be used for sending sensitive information that shouldn't be stored permanently.
