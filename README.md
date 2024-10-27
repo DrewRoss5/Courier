@@ -74,3 +74,6 @@ To use a command, type ">" in the message entry immediately followed by the comm
 - archive \<path> \[rounds]:
   - Creates a password-protected archive of the chat, and stores it to the specified directory (creating new directories as needed). The archive's file name is based on the current time, and it is name as `<HOUR>-<MINUTE>-<SECOND>.arc`
   - Specifiying the number of rounds is optional. Rounds determines the number of rounds of hashing your password will undergo to create an encryption key.
+- delete \[id]
+    - Deletes the message with the selected id
+    - If no id is specified, it will default to the user's last-sent message
