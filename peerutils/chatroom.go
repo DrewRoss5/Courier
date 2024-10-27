@@ -9,6 +9,7 @@ import (
 	"os"
 	"slices"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -97,6 +98,29 @@ func (c *Chatroom) SendMessage(msg *string) error {
 
 }
 
+// sends a message and waits for a given number of seconds before deleting it
+func (c *Chatroom) TimedMessage(msg *string, delay int) {
+	id := c.MaxId
+	err := c.SendMessage(msg)
+	if err != nil {
+		c.Active = false
+		return
+	}
+	time.Sleep(time.Second * time.Duration(delay))
+	c.DeleteMessage(id)
+}
+
+// deletes the message with a specified ID from the chat
+func (c *Chatroom) DeleteMessage(id uint32) {
+	delete(c.Messages, id)
+	buf := make([]byte, 4)
+	binary.LittleEndian.AppendUint32(buf, id)
+	err := c.Tunnel.SendMessage(append([]byte{MESSAGE_DELETE}, buf...))
+	if err != nil {
+		c.Active = false
+	}
+}
+
 // displays all of the Messages currently in the archive
 func (c Chatroom) DisplayMessages(file io.Writer) {
 	if len(c.Messages) == 0 {
@@ -136,10 +160,19 @@ func (c *Chatroom) HandleCommand(command string, args []string) {
 		var id uint32
 		if len(args) == 0 {
 			id = c.MaxId - 1
+			// find the last message the user sent
+			for id > 0 {
+				message, ok := c.Messages[id]
+				if ok && message.sender.Id == c.Tunnel.User.Id {
+					break
+				}
+				id--
+			}
 		} else {
-			tmp, err := strconv.Atoi(args[1])
+			tmp, err := strconv.Atoi(args[0])
 			if err != nil {
 				c.errorMessage("Invalid message id")
+				return
 			}
 			id = uint32(tmp)
 		}
@@ -148,10 +181,21 @@ func (c *Chatroom) HandleCommand(command string, args []string) {
 			c.errorMessage("Invalid message id")
 			return
 		}
-		delete(c.Messages, id)
-		buf := make([]byte, 4)
-		binary.LittleEndian.AppendUint32(buf, id)
-		c.Tunnel.SendMessage(append([]byte{MESSAGE_DELETE}, buf...))
+		c.DeleteMessage(id)
+	// sends a timed message that will automatically delete
+	case ">timed":
+		if len(args) < 2 {
+			c.errorMessage("This command takes at least two arguments")
+			return
+		}
+		delay, err := strconv.Atoi(args[0])
+		if err != nil {
+			c.errorMessage("Invalid delay time")
+			return
+		}
+		msg := strings.Join(args[1:], " ")
+		msg += "\n"
+		go c.TimedMessage(&msg, delay)
 	// archive the chat
 	case ">archive":
 		if len(args) < 1 || len(args) > 2 {
