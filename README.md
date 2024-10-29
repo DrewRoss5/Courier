@@ -5,7 +5,6 @@ Because courier is peer-to-peer, and currently requires peers to know a user's I
 
 
 # Roadmap/ToDo
-- Add self-destructing messages
 - Add group chats
 - Add support for multiple chats at once
   
