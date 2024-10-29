@@ -28,7 +28,6 @@ Because courier is peer-to-peer, and currently requires peers to know a user's I
   - As of version v0.1.2, you will be prompted to set a password to encrypt your private key with, it is recommended to set a password, as without one, your RSA private key will be stored in plaintext.
 
 # Usage:
-Once you've logged in, you'll be greeted with a prompt for a command. As of 10/16/2024, there are 3 available commands
 - connect <address>
   - Takes a peer's IP address and attempts to connect to them
 - await
