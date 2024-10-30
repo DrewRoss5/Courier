@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -28,17 +29,20 @@ type Chatroom struct {
 	Messages map[uint32]Message
 	MaxId    uint32
 	Active   bool
+	Mut      sync.Mutex
 }
 
 // appends a new message to the chat history
 func (c *Chatroom) pushMessage(msg *string, user *User) {
 	newMessage := NewMessage(*msg, user)
+	c.Mut.Lock()
 	c.Messages[c.MaxId] = *newMessage
 	c.MaxId++
 	if c.MaxId == 0xffffffff {
 		c.Messages = make(map[uint32]Message)
 		c.serverMessage("Message limit reached. Chat history cleared")
 	}
+	c.Mut.Unlock()
 }
 
 // appends a new message sent from the chatroom itself, used for alerts, and the like
@@ -75,7 +79,9 @@ func (c *Chatroom) AwaitMessage() error {
 		id := binary.LittleEndian.Uint32(msg)
 		message, ok := c.Messages[id]
 		if ok && message.sender.Id == c.Tunnel.Peer.Id {
+			c.Mut.Lock()
 			delete(c.Messages, id)
+			c.Mut.Unlock()
 		}
 	case CHAT_ARCHIVE:
 		c.serverMessage(fmt.Sprintf("%v%v%v archived this chat.", c.Tunnel.Peer.Color, c.Tunnel.Peer.Name, Green))
@@ -112,7 +118,9 @@ func (c *Chatroom) TimedMessage(msg *string, delay int) {
 
 // deletes the message with a specified ID from the chat
 func (c *Chatroom) DeleteMessage(id uint32) {
+	c.Mut.Lock()
 	delete(c.Messages, id)
+	c.Mut.Unlock()
 	buf := make([]byte, 4)
 	binary.LittleEndian.AppendUint32(buf, id)
 	err := c.Tunnel.SendMessage(append([]byte{MESSAGE_DELETE}, buf...))
@@ -122,7 +130,7 @@ func (c *Chatroom) DeleteMessage(id uint32) {
 }
 
 // displays all of the Messages currently in the archive
-func (c Chatroom) DisplayMessages(file io.Writer) {
+func (c *Chatroom) DisplayMessages(file io.Writer) {
 	if len(c.Messages) == 0 {
 		fmt.Printf("%v%vNo messages to display%v\n", Italic, Gray, ColorReset)
 		return
@@ -258,7 +266,7 @@ func (c *Chatroom) HandleCommand(command string, args []string) {
 }
 
 // archives a chat and saves it to a file in a given path
-func (c Chatroom) ArchiveChat(password []byte, path string, rounds int) error {
+func (c *Chatroom) ArchiveChat(password []byte, path string, rounds int) error {
 	// create the path if needed
 	err := os.MkdirAll(path, 0777)
 	if err != nil {
