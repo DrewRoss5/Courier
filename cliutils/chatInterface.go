@@ -13,7 +13,7 @@ import (
 
 // a struct that provides an interface to chatrooms. In future versions, this will be very useful for managing multiple chats
 type ChatInterface struct {
-	room peerutils.Chatroom
+	room *peerutils.Chatroom
 }
 
 // clears the terminal and displays all messages
@@ -63,11 +63,10 @@ func (ci *ChatInterface) AwaitInput() {
 			args = tmp[1:]
 		}
 		ci.room.HandleCommand(command, args)
-		ci.Display()
 	} else {
 		ci.room.SendMessage(&input)
-		ci.Display()
 	}
+	ci.Display()
 }
 
 // begins a chat session
@@ -83,6 +82,6 @@ func (ci *ChatInterface) Run() {
 // initializes a ChatInterface, given the tunnel
 func NewChatInterface(tunnel *peerutils.Tunnel) *ChatInterface {
 	chatroom := peerutils.Chatroom{Tunnel: *tunnel, Active: true, MaxId: 0, Messages: make(map[uint32]peerutils.Message)}
-	ci := ChatInterface{chatroom}
+	ci := ChatInterface{&chatroom}
 	return &ci
 }
