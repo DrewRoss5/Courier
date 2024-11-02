@@ -26,7 +26,7 @@ func (ci ChatInterface) Display() {
 	cmd := exec.Command(clearCommand)
 	cmd.Stdout = os.Stdout
 	cmd.Run()
-	fmt.Printf("Chat with %v:\n", ci.room.Tunnel.Peer.Name)
+	fmt.Printf("Chat with %v%v%v%v:\n", peerutils.Bold, ci.room.Tunnel.Peer.Color, ci.room.Tunnel.Peer.Name, peerutils.ColorReset)
 	ci.room.DisplayMessages(os.Stdout)
 }
 
