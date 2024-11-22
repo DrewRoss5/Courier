@@ -204,6 +204,21 @@ func (c *Chatroom) HandleCommand(command string, args []string) {
 		msg := strings.Join(args[1:], " ")
 		msg += "\n"
 		go c.TimedMessage(&msg, delay)
+	case (">color"):
+		if len(args) < 2 {
+			c.errorMessage("This command takes at least two arguments")
+		}
+		color, err := ParseColor(args[0])
+		if err != nil {
+			c.errorMessage("Invalid color")
+			return
+		}
+		// send the colored message
+		msg := color
+		msg += strings.Join(args[1:], " ")
+		msg += ColorReset + "\n"
+		c.SendMessage(&msg)
+
 	// archive the chat
 	case ">archive":
 		if len(args) < 1 || len(args) > 2 {

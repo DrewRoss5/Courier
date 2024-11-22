@@ -43,25 +43,9 @@ func login() (rsa.PrivateKey, rsa.PublicKey, peerutils.User) {
 	fmt.Print("Color (leave blank for gray): ")
 	var color string
 	fmt.Scanf("%s", &color)
-	switch strings.ToLower(color) {
-	case "":
-		color = peerutils.Gray
-	case "white":
-		color = peerutils.White
-	case "red":
-		color = peerutils.Red
-	case "blue":
-		color = peerutils.Blue
-	case "green":
-		color = peerutils.Green
-	case "magenta":
-		color = peerutils.Magenta
-	case "cyan":
-		color = peerutils.Cyan
-	case "yellow":
-		color = peerutils.Yellow
-	default:
-		fmt.Println("Invalid color")
+	color, err = peerutils.ParseColor(color)
+	if err != nil {
+		fmt.Printf("%vError:%v Invalid color. Exiting...\n", peerutils.Red, peerutils.ColorReset)
 		os.Exit(1)
 	}
 	// generate the user's ID

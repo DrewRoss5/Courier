@@ -1,8 +1,10 @@
 package peerutils
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 )
 
@@ -33,4 +35,29 @@ func (m Message) Display(stream io.Writer) {
 func NewMessage(content string, usr *User) *Message {
 	timeStr := time.Now().Format("15:04:05")
 	return &Message{content: content, sender: usr, timeSent: timeStr}
+}
+
+// parses a color's name into an ANSI color coe
+func ParseColor(color string) (string, error) {
+	switch strings.ToLower(color) {
+	case "":
+		color = Gray
+	case "white":
+		color = White
+	case "red":
+		color = Red
+	case "blue":
+		color = Blue
+	case "green":
+		color = Green
+	case "magenta":
+		color = Magenta
+	case "cyan":
+		color = Cyan
+	case "yellow":
+		color = Yellow
+	default:
+		return "", errors.New("invalid color")
+	}
+	return color, nil
 }

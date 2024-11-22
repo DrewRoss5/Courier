@@ -52,21 +52,23 @@ func (ci *ChatInterface) AwaitInput() {
 		fmt.Printf("%vError: %v%v\n", peerutils.Red, err.Error(), peerutils.ColorReset)
 		return
 	}
-	// determine if the input is a command or a message, and handle it appropriately
-	if input[0] == '>' {
-		// run the input as a command
-		input = strings.Replace(input, "\n", "", -1)
-		tmp := strings.Split(input, " ")
-		command := tmp[0]
-		var args []string = nil
-		if len(tmp) > 1 {
-			args = tmp[1:]
+	if ci.room.Active {
+		// determine if the input is a command or a message, and handle it appropriately
+		if input[0] == '>' {
+			// run the input as a command
+			input = strings.Replace(input, "\n", "", -1)
+			tmp := strings.Split(input, " ")
+			command := tmp[0]
+			var args []string = nil
+			if len(tmp) > 1 {
+				args = tmp[1:]
+			}
+			ci.room.HandleCommand(command, args)
+		} else {
+			ci.room.SendMessage(&input)
 		}
-		ci.room.HandleCommand(command, args)
-	} else {
-		ci.room.SendMessage(&input)
+		ci.Display()
 	}
-	ci.Display()
 }
 
 // begins a chat session
