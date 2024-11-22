@@ -77,3 +77,5 @@ To use a command, type ">" in the message entry immediately followed by the comm
     - If no id is specified, it will default to the user's last-sent message
 - timed \<delay> \<message>
     - Sends the message and automatically deletes it after `delay` seconds. This can be used for sending sensitive information that shouldn't be stored permanently.
+- color \<color> \<message>
+  - Sends the message coloring the text with the provided color. Supports the same colors as usernames.
