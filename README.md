@@ -43,7 +43,7 @@ Because courier is peer-to-peer, and currently requires peers to know a user's I
 ## Logging in
 When logging into courier you will recieve the following prompts
 - Username:
-  - This will be your display name. Can be anything you want as long as it is >= 64 characters in length.
+  - This will be your display name. Can be anything you want as long as it is <= 64 characters in length.
 - Color: 
   - This will be the color your name is displayed in 
   - Valid options:
